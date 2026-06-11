@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Do In Place</string>
+
+    <!-- Notification channels -->
+    <string name="notification_channel_reminders">Напоминания по месту</string>
+    <string name="notification_channel_reminders_desc">Уведомления при приближении к сохранённому месту</string>
+    <string name="notification_channel_tasks">Обновления задач</string>
+    <string name="notification_channel_tasks_desc">Статус общих задач и приглашения</string>
+
+    <!-- Settings -->
+    <string name="settings">Настройки</string>
+    <string name="language">Язык</string>
+    <string name="system_default">По умолчанию системы</string>
+    <string name="armenian">Армянский</string>
+    <string name="russian">Русский</string>
+    <string name="english">Английский</string>
+
+    <!-- Permissions -->
+    <string name="permissions">Разрешения</string>
+    <string name="notifications">Уведомления</string>
+    <string name="foreground_location">Местоположение (активный режим)</string>
+    <string name="background_location">Фоновое местоположение</string>
+    <string name="enable_location">Включить геолокацию</string>
+
+    <!-- Actions / buttons -->
+    <string name="save">Сохранить</string>
+    <string name="cancel">Отмена</string>
+    <string name="done">Готово</string>
+    <string name="close">Закрыть</string>
+    <string name="create_task">Создать задачу</string>
+    <string name="create_reminder">Новое напоминание</string>
+    <string name="create_reminder_btn">Создать напоминание</string>
+    <string name="back">Назад</string>
+
+    <!-- Task form -->
+    <string name="place">Место</string>
+    <string name="place_type">Тип места</string>
+    <string name="urgent">Срочно</string>
+    <string name="easy">Не срочно</string>
+    <string name="no_rush">Не срочно</string>
+    <string name="active">Активна</string>
+    <string name="assign_to_me">Назначить себе</string>
+    <string name="assignee">Исполнитель</string>
+    <string name="for_label">Кому:</string>
+    <string name="priority">Приоритет</string>
+    <string name="due_date">Срок (необязательно)</string>
+    <string name="title_optional">Название (необязательно)</string>
+    <string name="use_place_type_instead">Выбрать тип места</string>
+    <string name="suggested">Предложено</string>
+    <string name="select_saved_place">Выбрать сохранённое место</string>
+    <string name="no_saved_places_hint">Нет сохранённых мест — использ. Поиск</string>
+    <string name="search">Поиск</string>
+    <string name="radius_m">Радиус: %d м</string>
+    <string name="select_place_type">Выбрать тип места</string>
+    <string name="activates_near_matching">Активируется вблизи любого подходящего места</string>
+    <string name="use_exact_place">Точное место</string>
+    <string name="inferred_type">Определено: %s</string>
+    <string name="detected_as">Тип задачи:</string>
+    <string name="shopping_list_type">Список покупок</string>
+    <string name="simple_task_type">Простая задача</string>
+    <string name="change">· Изменить</string>
+    <string name="notes_optional">Заметки (необязательно)</string>
+    <string name="add_to_list">Добавить в список:</string>
+    <string name="priority_label">Приоритет:</string>
+    <string name="confirm_reminder">Подтвердить напоминание</string>
+    <string name="confirm_assignment">Подтвердить назначение</string>
+    <string name="assigning_to">Назначение</string>
+    <string name="create">Создать</string>
+    <string name="for_me">Я</string>
+
+    <!-- Shopping list -->
+    <string name="shopping_list">Список покупок</string>
+    <string name="sort_list">Сортировка</string>
+    <string name="auto_order">Авто-порядок</string>
+    <string name="shopping_items">Товары</string>
+    <string name="check_all">Отметить всё</string>
+    <string name="all_items_checked">Все товары отмечены!</string>
+
+    <!-- Contacts / social -->
+    <string name="contacts">Контакты</string>
+    <string name="friends">Друзья</string>
+    <string name="connections">Контакты</string>
+
+    <!-- Place picker -->
+    <string name="add_place">Добавить место</string>
+    <string name="search_place">Поиск места или адреса</string>
+    <string name="use_my_location">Использовать моё местоположение</string>
+    <string name="save_place">Сохранить место</string>
+
+    <!-- Home screen -->
+    <string name="no_reminders_yet">Напоминаний пока нет</string>
+    <string name="tap_to_create">Нажмите + для создания напоминания по месту</string>
+
+    <!-- Task detail -->
+    <string name="accept">Принять</string>
+    <string name="reject">Отклонить</string>
+    <string name="history">История</string>
+    <string name="respond_to_task">Ответить на задачу</string>
+    <string name="arrival_share_enabled">Включено</string>
+
+    <!-- Common actions -->
+    <string name="remove">Удалить</string>
+    <string name="keep">Оставить</string>
+    <string name="share">Поделиться</string>
+    <string name="copy">Копировать</string>
+    <string name="send_invite">Отправить приглашение</string>
+    <string name="add_contact">Добавить контакт</string>
+    <string name="decline">Отклонить</string>
+    <string name="log_out">Выйти</string>
+    <string name="delete_local_data">Удалить локальные данные</string>
+    <string name="open_settings">Открыть настройки</string>
+    <string name="keep_task">Оставить задачу</string>
+    <string name="cancel_task">Отменить задачу</string>
+    <string name="cancel_and_notify">Отменить и уведомить</string>
+    <string name="my_qr_btn">Мой QR</string>
+    <string name="scan_qr">Сканировать QR</string>
+    <string name="email">Email</string>
+    <string name="paste_link">Вставить ссылку</string>
+    <string name="web">Веб</string>
+    <string name="copy_link">Копировать ссылку</string>
+
+    <!-- Settings content -->
+    <string name="clear_task_learning_btn">Очистить локальное обучение</string>
+    <string name="copy_debug_info">Копировать отладочную информацию</string>
+    <string name="local_learning_desc">Геолокация используется только для определения прибытия к месту задачи.</string>
+    <string name="no_live_location">Текущее местоположение никогда не передаётся друзьям.</string>
+    <string name="local_learning_device">Локальное обучение никогда не покидает устройство.</string>
+
+    <!-- Place picker -->
+    <string name="place_type_label">Тип места</string>
+    <string name="detection_radius">Радиус обнаружения</string>
+    <string name="use_current_location">Использовать текущее местоположение</string>
+    <string name="getting_location">Определяется местоположение…</string>
+    <string name="place_name_hint">Название места *</string>
+
+    <!-- Home -->
+    <string name="new_reminder_fab">Новое напоминание</string>
+    <string name="archive">Архив</string>
+    <string name="task_not_done_warning">Задача ещё не завершена. При отмене напоминание остановится.</string>
+
+    <!-- Contacts -->
+    <string name="friends_email">Email друга</string>
+    <string name="invite_link_label">Ссылка-приглашение</string>
+    <string name="pending_hint">После принятия попросите другого человека отсканировать ВАШ QR-код.</string>
+    <string name="no_contacts_hint">Контактов пока нет.\nПокажите свой QR-код или пригласите по email.</string>
+
+    <!-- Archive -->
+    <string name="archived_tasks">Архивные задачи</string>
+    <string name="no_archived_tasks">Нет архивных задач</string>
+    <string name="swipe_to_archive">Смахните задачу влево на главном экране для архивации</string>
+
+    <!-- Saved places -->
+    <string name="saved_places">Сохранённые места</string>
+    <string name="remove_place">Удалить место?</string>
+    <string name="no_saved_places">Нет сохранённых мест</string>
+
+    <!-- Sort list -->
+    <string name="sort_shopping_list">Сортировка списка</string>
+
+    <!-- Dialogs -->
+    <string name="cancel_task_title">Отменить незавершённую задачу?</string>
+    <string name="cancel_friend_task_title">Отменить задачу друга?</string>
+    <string name="remove_contact_title">Удалить контакт?</string>
+    <string name="web_invite_link">Ссылка-приглашение</string>
+    <string name="my_qr_code">Мой QR-код приглашения</string>
+    <string name="invite_by_email">Пригласить по email</string>
+    <string name="paste_invite_link">Вставить ссылку-приглашение</string>
+    <string name="arrival_sharing">Уведомление о прибытии</string>
+    <string name="clear_task_learning_title">Очистить локальное обучение?</string>
+
+    <!-- Share location from Maps -->
+    <string name="share_place_title">Сохранить место?</string>
+    <string name="share_place_hint">Название места</string>
+    <string name="share_place_save">Сохранить</string>
+    <string name="share_place_discard">Отмена</string>
+    <string name="share_place_saved">Место сохранено</string>
+    <string name="share_place_error">Не удалось прочитать координаты из ссылки</string>
+    <string name="share_place_resolving">Читаем место…</string>
+</resources>

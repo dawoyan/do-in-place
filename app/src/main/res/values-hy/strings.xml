@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Do In Place</string>
+
+    <!-- Notification channels -->
+    <string name="notification_channel_reminders">Տեղային հիշեցումներ</string>
+    <string name="notification_channel_reminders_desc">Ծանուցումներ, երբ հասնում եք նշված վայր</string>
+    <string name="notification_channel_tasks">Խնդիրների թարմացումներ</string>
+    <string name="notification_channel_tasks_desc">Ընդհանուր խնդիրների կարգավիճակ և հրավերներ</string>
+
+    <!-- Settings -->
+    <string name="settings">Կարգավորումներ</string>
+    <string name="language">Լեզու</string>
+    <string name="system_default">Համակարգի լռելյայն</string>
+    <string name="armenian">Հայերեն</string>
+    <string name="russian">Ռուսերեն</string>
+    <string name="english">Անգլերեն</string>
+
+    <!-- Permissions -->
+    <string name="permissions">Թույլտվություններ</string>
+    <string name="notifications">Ծանուցումներ</string>
+    <string name="foreground_location">Գտնվելու վայր (ֆոն)</string>
+    <string name="background_location">Ֆոնային գտնվելու վայր</string>
+    <string name="enable_location">Միացնել տեղայնացումը</string>
+
+    <!-- Actions / buttons -->
+    <string name="save">Պահպանել</string>
+    <string name="cancel">Չեղարկել</string>
+    <string name="done">Կատարված</string>
+    <string name="close">Փակել</string>
+    <string name="create_task">Ստեղծել խնդիր</string>
+    <string name="create_reminder">Նոր հիշեցում</string>
+    <string name="create_reminder_btn">Ստեղծել հիշեցում</string>
+    <string name="back">Հետ</string>
+
+    <!-- Task form -->
+    <string name="place">Վայր</string>
+    <string name="place_type">Վայրի տեսակ</string>
+    <string name="urgent">Շտապ</string>
+    <string name="easy">Անշտապ</string>
+    <string name="no_rush">Անշտապ</string>
+    <string name="active">Ակտիվ</string>
+    <string name="assign_to_me">Ինձ հանձնարարել</string>
+    <string name="assignee">Կատարողը</string>
+    <string name="for_label">Ում:</string>
+    <string name="priority">Առաջնահերթություն</string>
+    <string name="due_date">Ժամկետ (ըստ ցանկության)</string>
+    <string name="title_optional">Վերնագիր (ըստ ցանկության)</string>
+    <string name="use_place_type_instead">Օգտագործել վայրի տեսակ</string>
+    <string name="suggested">Առաջարկվում է</string>
+    <string name="select_saved_place">Ընտրել պահված վայր</string>
+    <string name="no_saved_places_hint">Պահված վայրեր չկան — Օգտ. Որոնումը</string>
+    <string name="search">Որոնել</string>
+    <string name="radius_m">Շառ.՝ %d մ</string>
+    <string name="select_place_type">Ընտրել վայրի տեսակ</string>
+    <string name="activates_near_matching">Ակտիվանում է ցանկացած համապատասխան վայրի մոտ</string>
+    <string name="use_exact_place">Կոնկրետ վայր</string>
+    <string name="inferred_type">Ենթադրվում է՝ %s</string>
+    <string name="detected_as">Որոշված՝</string>
+    <string name="shopping_list_type">Գնումների ցուցակ</string>
+    <string name="simple_task_type">Պարզ խնդիր</string>
+    <string name="change">· Փոխել</string>
+    <string name="notes_optional">Նշումներ (ըստ ցանկության)</string>
+    <string name="add_to_list">Ավելացնել ցուցակին.</string>
+    <string name="priority_label">Առաջնահերթ.՝</string>
+    <string name="confirm_reminder">Հաստատել հիշեցումը</string>
+    <string name="confirm_assignment">Հաստատել հանձնարարությունը</string>
+    <string name="assigning_to">Հանձնարարվում է</string>
+    <string name="create">Ստեղծել</string>
+    <string name="for_me">Ես</string>
+
+    <!-- Shopping list -->
+    <string name="shopping_list">Գնումների ցուցակ</string>
+    <string name="sort_list">Դասավ.</string>
+    <string name="auto_order">Ավտո կարգ</string>
+    <string name="shopping_items">Ապրանքներ</string>
+    <string name="check_all">Ամեն.</string>
+    <string name="all_items_checked">Բոլոր ապրանքները նշված են!</string>
+
+    <!-- Contacts / social -->
+    <string name="contacts">Կապեր</string>
+    <string name="friends">Ընկերներ</string>
+    <string name="connections">Կապեր</string>
+
+    <!-- Place picker -->
+    <string name="add_place">Ավելացնել վայր</string>
+    <string name="search_place">Որոնել վայր կամ հասցե</string>
+    <string name="use_my_location">Օգտագործել իմ գտնվելու վայրը</string>
+    <string name="save_place">Պահպանել վայրը</string>
+
+    <!-- Home screen -->
+    <string name="no_reminders_yet">Հիշեցումներ դեռ չկան</string>
+    <string name="tap_to_create">Հպեք + ստեղծելու վայրային հիշեցում</string>
+
+    <!-- Task detail -->
+    <string name="accept">Ընդունել</string>
+    <string name="reject">Մերժել</string>
+    <string name="history">Պատմություն</string>
+    <string name="respond_to_task">Արձագանքել այս խնդրին</string>
+    <string name="arrival_share_enabled">Ակտիվ</string>
+
+    <!-- Common actions -->
+    <string name="remove">Հեռացնել</string>
+    <string name="keep">Պահել</string>
+    <string name="share">Կիսվել</string>
+    <string name="copy">Պատճենել</string>
+    <string name="send_invite">Ուղարկել հրավեր</string>
+    <string name="add_contact">Ավելացնել կապ</string>
+    <string name="decline">Մերժել</string>
+    <string name="log_out">Ելք</string>
+    <string name="delete_local_data">Ջնջել տեղական տվյալները</string>
+    <string name="open_settings">Բացել կարգավորումները</string>
+    <string name="keep_task">Պահել խնդիրը</string>
+    <string name="cancel_task">Չեղարկել խնդիրը</string>
+    <string name="cancel_and_notify">Չեղարկել և ծանուցել</string>
+    <string name="my_qr_btn">Իմ QR</string>
+    <string name="scan_qr">Սկանավորել QR</string>
+    <string name="email">Էլ-փոստ</string>
+    <string name="paste_link">Տեղադրել հղում</string>
+    <string name="web">Վեբ</string>
+    <string name="copy_link">Պատճենել հղումը</string>
+
+    <!-- Settings content -->
+    <string name="clear_task_learning_btn">Մաքրել տեղական ուսուցումը</string>
+    <string name="copy_debug_info">Պատճենել կարգաբերման տվյալները</string>
+    <string name="local_learning_desc">Տեղայնացումն օգտագործվում է միայն ժամանումը հայտնաբերելու համար։</string>
+    <string name="no_live_location">Ուղիղ տեղայնացումը երբեք չի կիսվում ընկերների հետ։</string>
+    <string name="local_learning_device">Տեղական ուսուցումը երբեք չի դուրս գալիս սարքից։</string>
+
+    <!-- Place picker -->
+    <string name="place_type_label">Վայրի տեսակ</string>
+    <string name="detection_radius">Հայտնաբերման շառավիղ</string>
+    <string name="use_current_location">Օգտագործել ընթացիկ տեղայնացումը</string>
+    <string name="getting_location">Ստացվում է տեղայնացումը…</string>
+    <string name="place_name_hint">Վայրի անուն *</string>
+
+    <!-- Home -->
+    <string name="new_reminder_fab">Նոր հիշեցում</string>
+    <string name="archive">Արխիվ</string>
+    <string name="task_not_done_warning">Խնդիրը դեռ կատարված չէ: Չեղարկելու դեպքում հիշեցումը կդադարի:</string>
+
+    <!-- Contacts -->
+    <string name="friends_email">Ընկերոջ էլ-փոստ</string>
+    <string name="invite_link_label">Հրավիրման հղում</string>
+    <string name="pending_hint">Ընդունելուց հետո խնդրեք մյուս անձին սկանավորել ՁԵՐ QR կոդը:</string>
+    <string name="no_contacts_hint">Կապեր դեռ չկան:\nՑույց տվեք QR կոդը կամ հրավիրեք էլ-փոստով:</string>
+
+    <!-- Archive -->
+    <string name="archived_tasks">Արխիվացված խնդիրներ</string>
+    <string name="no_archived_tasks">Արխիվ չկա</string>
+    <string name="swipe_to_archive">Սահեցրեք ձախ՝ արխիվացնելու համար</string>
+
+    <!-- Saved places -->
+    <string name="saved_places">Պահված վայրեր</string>
+    <string name="remove_place">Հեռացնե՞լ վայրը</string>
+    <string name="no_saved_places">Պահված վայրեր չկան</string>
+
+    <!-- Sort list -->
+    <string name="sort_shopping_list">Դասավորել ցուցակը</string>
+
+    <!-- Dialogs -->
+    <string name="cancel_task_title">Չեղարկե՞լ կիսատ խնդիրը</string>
+    <string name="cancel_friend_task_title">Չեղարկե՞լ ընկերոջ խնդիրը</string>
+    <string name="remove_contact_title">Հեռացնե՞լ կապը</string>
+    <string name="web_invite_link">Հրավիրման հղում</string>
+    <string name="my_qr_code">Իմ QR կոդը</string>
+    <string name="invite_by_email">Հրավիրել էլ-փոստով</string>
+    <string name="paste_invite_link">Տեղադրել հրավիրման հղում</string>
+    <string name="arrival_sharing">Ժամանման կիսում</string>
+    <string name="clear_task_learning_title">Մաքրե՞լ տեղական ուսուցումը</string>
+
+    <!-- Share location from Maps -->
+    <string name="share_place_title">Պահե՞լ կիսված վայրը</string>
+    <string name="share_place_hint">Վայրի անունը</string>
+    <string name="share_place_save">Պահել</string>
+    <string name="share_place_discard">Անտեսել</string>
+    <string name="share_place_saved">Վայրը պահված է</string>
+    <string name="share_place_error">Հնարավոր չէ կարդալ վայրի կոորդինատները</string>
+    <string name="share_place_resolving">Կարդում ենք վայրը…</string>
+</resources>

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#1E40AF"/>
+    </linearGradient>
+    <linearGradient id="pin-shine" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#E0EAFF" stop-opacity="1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background (Google applies the rounded mask) -->
+  <rect width="512" height="512" fill="url(#bg)"/>
+
+  <!-- Pin shadow / depth -->
+  <path fill="#1E3A8A" opacity="0.35" d="
+    M 264 96
+    C 198 96, 148 148, 148 214
+    C 148 308, 264 448, 264 448
+    C 264 448, 380 308, 380 214
+    C 380 148, 330 96, 264 96 Z
+  "/>
+
+  <!-- Main white pin -->
+  <path fill="url(#pin-shine)" d="
+    M 256 84
+    C 190 84, 140 136, 140 202
+    C 140 295, 256 432, 256 432
+    C 256 432, 372 295, 372 202
+    C 372 136, 322 84, 256 84 Z
+  "/>
+
+  <!-- Inner blue circle -->
+  <circle cx="256" cy="202" r="66" fill="#2563EB"/>
+
+  <!-- White checkmark -->
+  <path d="M 222 202 L 244 226 L 294 172"
+        stroke="white" stroke-width="16"
+        stroke-linecap="round" stroke-linejoin="round"
+        fill="none"/>
+</svg>

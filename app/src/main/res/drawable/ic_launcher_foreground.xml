@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Adaptive icon foreground — 108×108dp canvas, safe zone is the inner 72dp circle.
+  Pin scaled to 75% of original size, centered at (54,54), giving comfortable
+  padding within the adaptive icon safe zone so the full pin shape is never cropped.
+  Design: white location pin (ring style) + checkmark inside pin head + small dot badge.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Location pin outer body + inner hole via even-odd fill (ring/donut shape).
+         Coordinates scaled 0.75× from (54,54): top=27, tip=78, width 37.5–70.5 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="
+            M54,27
+            C44.89,27 37.5,34.39 37.5,43.5
+            C37.5,55.88 54,78 54,78
+            C54,78 70.5,55.88 70.5,43.5
+            C70.5,34.39 63.11,27 54,27 Z
+            M54,36.75
+            C49.03,36.75 45,40.78 45,45.75
+            C45,50.72 49.03,54.75 54,54.75
+            C58.97,54.75 63,50.72 63,45.75
+            C63,40.78 58.97,36.75 54,36.75 Z" />
+
+    <!-- Checkmark inside pin head (scaled to match pin) -->
+    <path
+        android:strokeColor="#1A9FE0"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M48,45.75 L52.13,50.63 L60.75,40.5" />
+
+    <!-- Small notification dot badge — upper-right of pin head -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.9"
+        android:pathData="M64,27 C64,25.34 65.34,24 67,24 C68.66,24 70,25.34 70,27 C70,28.66 68.66,30 67,30 C65.34,30 64,28.66 64,27 Z" />
+
+</vector>
