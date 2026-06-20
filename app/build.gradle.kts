@@ -25,8 +25,8 @@ android {
         applicationId = "com.davoyans.doinplace"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 29
+        versionName = "2.4.6"
 
         buildConfigField("String", "SUPABASE_URL",          "\"${localProp("supabase.url")}\"")
         buildConfigField("String", "SUPABASE_ANON_KEY",     "\"${localProp("supabase.anonKey")}\"")
@@ -73,7 +73,29 @@ tasks.register("renameDebugApk") {
         if (src.exists()) src.copyTo(apkDir.resolve("do-in-place-debug.apk"), overwrite = true)
     }
 }
-tasks.matching { it.name == "assembleDebug" }.configureEach { finalizedBy("renameDebugApk") }
+
+tasks.register("archiveDebugApk") {
+    dependsOn("renameDebugApk")
+    doLast {
+        val apkDir = layout.buildDirectory.dir("outputs/apk/debug").get().asFile
+        val src = apkDir.resolve("do-in-place-debug.apk")
+        if (!src.exists()) return@doLast
+
+        val archiveDir = rootProject.rootDir.parentFile.resolve("apks").apply { mkdirs() }
+        val pattern = Regex("""do-in-place-(\d+)\.apk""")
+        val nextNumber = archiveDir.listFiles()
+            ?.mapNotNull { file -> pattern.matchEntire(file.name)?.groupValues?.get(1)?.toIntOrNull() }
+            ?.maxOrNull()
+            ?.plus(1)
+            ?: 1
+
+        src.copyTo(archiveDir.resolve("do-in-place-$nextNumber.apk"), overwrite = true)
+    }
+}
+
+tasks.matching { it.name == "assembleDebug" }.configureEach {
+    finalizedBy("archiveDebugApk")
+}
 
 kotlin { jvmToolchain(17) }
 
@@ -124,4 +146,7 @@ dependencies {
 
     // HTML parsing for article summary extraction
     implementation("org.jsoup:jsoup:1.17.2")
+
+    testImplementation(kotlin("test"))
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
 }

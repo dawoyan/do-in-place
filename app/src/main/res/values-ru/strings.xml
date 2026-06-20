@@ -26,6 +26,7 @@
     <!-- Actions / buttons -->
     <string name="save">Сохранить</string>
     <string name="cancel">Отмена</string>
+    <string name="delete">Удалить</string>
     <string name="done">Готово</string>
     <string name="close">Закрыть</string>
     <string name="create_task">Создать задачу</string>
@@ -89,6 +90,7 @@
     <string name="save_place">Сохранить место</string>
 
     <!-- Home screen -->
+    <string name="tab_home">Главная</string>
     <string name="no_reminders_yet">Напоминаний пока нет</string>
     <string name="tap_to_create">Нажмите + для создания напоминания по месту</string>
 
@@ -151,12 +153,71 @@
     <string name="swipe_to_archive">Смахните задачу влево на главном экране для архивации</string>
 
     <!-- Saved places -->
-    <string name="saved_places">Сохранённые места</string>
+    <string name="saved_places">Места</string>
+    <string name="places">Места</string>
     <string name="remove_place">Удалить место?</string>
     <string name="no_saved_places">Нет сохранённых мест</string>
+    <string name="delete_place_confirm">Удалить «%1$s»?</string>
+    <string name="edit_place">Изменить место</string>
+    <string name="edit">Изменить</string>
+    <string name="address">Адрес</string>
 
-    <!-- Sort list -->
+    <!-- Saved cards -->
+    <string name="tab_cards">Карты</string>
+    <string name="cards_empty_title">Сохранённых карт пока нет</string>
+    <string name="cards_empty_subtitle">Отсканируйте или добавьте карту, чтобы сохранить её QR или штрихкод на этом телефоне.</string>
+    <string name="cards_scan">Сканировать карту</string>
+    <string name="cards_add_photo">Добавить из фото</string>
+    <string name="cards_add_manual">Добавить вручную</string>
+    <string name="cards_saved_locally">Сохраняется только на этом телефоне.</string>
+    <string name="cards_name">Название карты</string>
+    <string name="cards_code_type">Тип кода</string>
+    <string name="cards_code_value">Значение кода</string>
+    <string name="cards_note">Заметка</string>
+    <string name="cards_password_pin">Пароль / PIN / код</string>
+    <string name="show_password">Показать пароль</string>
+    <string name="hide_password">Скрыть пароль</string>
+    <string name="cards_save">Сохранить карту</string>
+    <string name="cards_copy">Копировать код</string>
+    <string name="cards_copied">Скопировано</string>
+    <string name="cards_delete_title">Удалить карту?</string>
+    <string name="cards_delete_message">Удалить «%1$s» с этого телефона?</string>
+    <string name="cards_duplicate_title">Карта уже сохранена</string>
+    <string name="cards_duplicate_message">Этот код уже сохранён как «%1$s».</string>
+    <string name="cards_open_existing">Открыть существующую</string>
+    <string name="cards_save_duplicate">Сохранить копию</string>
+    <string name="cards_camera_permission_title">Нужно разрешение камеры</string>
+    <string name="cards_camera_permission_message">Разрешите доступ к камере, чтобы сканировать QR и штрихкоды. Можно также добавить код вручную.</string>
+    <string name="cards_render_fallback_qr">Этот формат штрихкода нельзя отобразить. Показываем его как QR.</string>
+    <string name="cards_detected_code">Найденный код</string>
+    <string name="cards_type">Тип</string>
+    <string name="cards_type_qr">QR</string>
+    <string name="cards_type_barcode">Штрихкод</string>
+    <string name="cards_name_required">Введите название карты.</string>
+    <string name="cards_code_value_required">Введите значение кода.</string>
+    <string name="cards_manual_barcode_hint">Штрихкоды, добавленные вручную, сохраняются как CODE-128, если они не пришли из сканирования.</string>
+    <string name="cards_edit">Изменить</string>
+    <string name="cards_edit_warning">Здесь можно изменить только название карты и заметку. Сам код остаётся без изменений.</string>
+    <string name="cards_render_failed">Этот код не удалось отобразить.</string>
+    <string name="cards_scan_again">Сканировать снова</string>
+    <string name="cards_try_again">Повторить</string>
+    <string name="cards_scan_cancelled">Код не был отсканирован.</string>
+    <string name="cards_scan_prompt">Сканируйте QR или штрихкод</string>
+    <string name="cards_no_matches">Нет сохранённых карт по вашему запросу.</string>
+    <string name="cards_photo_decode_failed">В этом изображении не найден QR или штрихкод.</string>
+
+    <!-- Sort / Edit list -->
     <string name="sort_shopping_list">Сортировка списка</string>
+    <string name="shopping_edit_title">Редактировать список покупок</string>
+    <string name="shopping_edit_hint">Тяните ручку для сортировки · корзина удаляет с подтверждением</string>
+    <string name="shopping_delete_item_title">Удалить товар?</string>
+    <string name="shopping_delete_item_message">Удалить «%1$s» из этого списка покупок?</string>
+    <string name="shopping_view_only_no_edit">Вы можете просматривать этот список, но не редактировать.</string>
+    <string name="action_auto_sort">Автосорт.</string>
+    <string name="action_edit">Редакт.</string>
+    <string name="save_order">Сохранить порядок</string>
+    <string name="save_as_default_for_place">Сохранить как стандартный</string>
+    <string name="saved_default_for">Сохранено для %1$s</string>
 
     <!-- Dialogs -->
     <string name="cancel_task_title">Отменить незавершённую задачу?</string>
@@ -168,6 +229,55 @@
     <string name="paste_invite_link">Вставить ссылку-приглашение</string>
     <string name="arrival_sharing">Уведомление о прибытии</string>
     <string name="clear_task_learning_title">Очистить локальное обучение?</string>
+
+    <!-- Everywhere / time-based tasks -->
+    <string name="everywhere">Везде</string>
+    <string name="everywhere_subtitle">Напоминание по дате — местоположение не нужно</string>
+    <string name="time_based_tasks">Задачи по времени</string>
+    <string name="recurring_tasks">Повторяющиеся задачи</string>
+    <string name="add_recurring_task">Добавить повторяющуюся задачу</string>
+    <string name="add_recurring_task_title">Добавить повторяющуюся задачу</string>
+    <string name="edit_recurring_task_title">Изменить повторяющуюся задачу</string>
+    <string name="edit_recurring_task">Изменить повторяющуюся задачу</string>
+    <string name="recurring_task_note">Только по дате. Место, геозона и местоположение не используются.</string>
+    <string name="recurrence_type">Тип повторения</string>
+    <string name="day_of_month">День месяца</string>
+    <string name="month">Месяц</string>
+    <string name="day">День</string>
+    <string name="next_reminder">Следующее напоминание</string>
+    <string name="recurring_empty">Повторяющихся задач пока нет</string>
+    <string name="due_date_required">Срок *</string>
+    <string name="everywhere_due_date_required">Для напоминаний «Везде» требуется срок выполнения.</string>
+    <string name="everywhere_shopping_needs_type">Для списка покупок нужно выбрать хотя бы тип места.</string>
+    <string name="recurrence_none">Один раз</string>
+    <string name="recurrence_monthly">Ежемесячно</string>
+    <string name="recurrence_yearly">Ежегодно</string>
+    <string name="repeats_label">Повторение:</string>
+    <string name="repeats_monthly_on" formatted="false">Каждый месяц %d%s числа</string>
+    <string name="repeats_yearly_on" formatted="false">Каждый год %s %d</string>
+    <string name="exact_label">Точное</string>
+    <string name="type_label">Тип</string>
+    <string name="overdue">Просрочено</string>
+    <string name="due_soon">Скоро</string>
+    <string name="due_today">Сегодня</string>
+    <string name="calendar_add_dialog_title">Добавить в Google Календарь?</string>
+    <string name="calendar_add_dialog_text">Добавить «%s» как выполненное?</string>
+    <string name="calendar_yes_add">Да, добавить</string>
+    <string name="calendar_done_failed">Задача выполнена, но Google Календарь не был обновлён.</string>
+    <string name="discard_changes_title">Отменить изменения?</string>
+    <string name="discard_changes_message">Ваши изменения не были сохранены.</string>
+    <string name="discard">Не сохранять</string>
+
+    <!-- Contacts / connection actions -->
+    <string name="action_cancel_request">Отменить запрос</string>
+    <string name="action_resend_request">Отправить снова</string>
+    <string name="waiting_for_acceptance">Ожидает подтверждения…</string>
+    <string name="connection_accepted_title">Запрос принят</string>
+    <string name="connection_accepted_body">%s принял ваш запрос на подключение</string>
+    <string name="task_shared_notification_title">Задача поделена с вами</string>
+    <string name="task_shared_notification_body">%s поделился &#8220;%s&#8221; с вами</string>
+    <string name="healthier_item_icon">Более полезный продукт</string>
+    <string name="less_healthy_item_icon">Менее полезный продукт</string>
 
     <!-- Share location from Maps -->
     <string name="share_place_title">Сохранить место?</string>

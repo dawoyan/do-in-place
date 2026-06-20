@@ -33,7 +33,10 @@ fun PlacePickerScreen(
     onPlacePicked: (SavedPlace) -> Unit,
     onDeletePlace: (SavedPlace) -> Unit = {},
     onBack: () -> Unit,
-    placeSearchRepository: PlaceSearchRepository
+    placeSearchRepository: PlaceSearchRepository,
+    initialPlace: SavedPlace? = null,
+    titleText: String? = null,
+    showSavedPlacesSection: Boolean = true
 ) {
     val scope = rememberCoroutineScope()
     val geoapify = remember { GeoapifyPlaceSearchProvider() }
@@ -67,12 +70,12 @@ fun PlacePickerScreen(
     }
 
     // ── GPS / manual state ───────────────────────────────────────────────────
-    var customName by remember { mutableStateOf("") }
-    var customAddress by remember { mutableStateOf("") }
-    var selectedType by remember { mutableStateOf(PlaceType.CUSTOM) }
-    var radius by remember { mutableStateOf(100) }
-    var resolvedLat by remember { mutableStateOf<Double?>(null) }
-    var resolvedLng by remember { mutableStateOf<Double?>(null) }
+    var customName by remember(initialPlace?.id) { mutableStateOf(initialPlace?.name.orEmpty()) }
+    var customAddress by remember(initialPlace?.id) { mutableStateOf(initialPlace?.address.orEmpty()) }
+    var selectedType by remember(initialPlace?.id) { mutableStateOf(initialPlace?.placeType ?: PlaceType.CUSTOM) }
+    var radius by remember(initialPlace?.id) { mutableStateOf(initialPlace?.radiusMeters ?: 100) }
+    var resolvedLat by remember(initialPlace?.id) { mutableStateOf(initialPlace?.latitude) }
+    var resolvedLng by remember(initialPlace?.id) { mutableStateOf(initialPlace?.longitude) }
     var locating by remember { mutableStateOf(false) }
     var locatingError by remember { mutableStateOf("") }
     var typeExpanded by remember { mutableStateOf(false) }
@@ -96,7 +99,7 @@ fun PlacePickerScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.add_place)) },
+                title = { Text(titleText ?: stringResource(R.string.add_place)) },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, stringResource(R.string.back)) } }
             )
         }
@@ -181,7 +184,7 @@ fun PlacePickerScreen(
                 items(suggestions, key = { it.id }) { result ->
                     SuggestionRow(result) {
                         val place = SavedPlace(
-                            id = UUID.randomUUID().toString(),
+                            id = initialPlace?.id ?: UUID.randomUUID().toString(),
                             userId = userId,
                             name = result.title,
                             address = result.formattedAddress,
@@ -189,7 +192,9 @@ fun PlacePickerScreen(
                             longitude = result.longitude,
                             radiusMeters = radiusForCategory(result.rawCategory),
                             placeType = placeTypeForCategory(result.rawCategory),
-                            provider = result.provider
+                            provider = result.provider,
+                            createdAt = initialPlace?.createdAt ?: System.currentTimeMillis(),
+                            updatedAt = System.currentTimeMillis()
                         )
                         onPlacePicked(place)
                     }
@@ -206,11 +211,11 @@ fun PlacePickerScreen(
             }
 
             // ── 4. Saved places ──────────────────────────────────────────────
-            if (savedPlaces.isNotEmpty()) {
+            if (showSavedPlacesSection && savedPlaces.isNotEmpty()) {
                 item { HorizontalDivider(Modifier.padding(vertical = 4.dp)) }
                 item {
                     Text(
-                        "Saved places",
+                        stringResource(R.string.places),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -387,7 +392,7 @@ fun PlacePickerScreen(
                 Button(
                     onClick = {
                         val place = SavedPlace(
-                            id = UUID.randomUUID().toString(),
+                            id = initialPlace?.id ?: UUID.randomUUID().toString(),
                             userId = userId,
                             name = customName.trim(),
                             address = customAddress.trim().takeIf { it.isNotBlank() },
@@ -395,7 +400,9 @@ fun PlacePickerScreen(
                             longitude = resolvedLng ?: 0.0,
                             radiusMeters = radius,
                             placeType = selectedType,
-                            provider = "gps"
+                            provider = initialPlace?.provider?.ifBlank { "gps" } ?: "gps",
+                            createdAt = initialPlace?.createdAt ?: System.currentTimeMillis(),
+                            updatedAt = System.currentTimeMillis()
                         )
                         onPlacePicked(place)
                     },

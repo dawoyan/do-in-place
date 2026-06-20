@@ -26,6 +26,7 @@
     <!-- Actions / buttons -->
     <string name="save">Պահպանել</string>
     <string name="cancel">Չեղարկել</string>
+    <string name="delete">Ջնջել</string>
     <string name="done">Կատարված</string>
     <string name="close">Փակել</string>
     <string name="create_task">Ստեղծել խնդիր</string>
@@ -89,6 +90,7 @@
     <string name="save_place">Պահպանել վայրը</string>
 
     <!-- Home screen -->
+    <string name="tab_home">Գլխավոր</string>
     <string name="no_reminders_yet">Հիշեցումներ դեռ չկան</string>
     <string name="tap_to_create">Հպեք + ստեղծելու վայրային հիշեցում</string>
 
@@ -151,12 +153,71 @@
     <string name="swipe_to_archive">Սահեցրեք ձախ՝ արխիվացնելու համար</string>
 
     <!-- Saved places -->
-    <string name="saved_places">Պահված վայրեր</string>
+    <string name="saved_places">Վայրեր</string>
+    <string name="places">Վայրեր</string>
     <string name="remove_place">Հեռացնե՞լ վայրը</string>
     <string name="no_saved_places">Պահված վայրեր չկան</string>
+    <string name="delete_place_confirm">Ջնջե՞լ «%1$s»-ը</string>
+    <string name="edit_place">Խմբագրել վայրը</string>
+    <string name="edit">Խմբագրել</string>
+    <string name="address">Հասցե</string>
 
-    <!-- Sort list -->
+    <!-- Saved cards -->
+    <string name="tab_cards">Քարտեր</string>
+    <string name="cards_empty_title">Պահված քարտեր դեռ չկան</string>
+    <string name="cards_empty_subtitle">Սկանավորեք կամ ավելացրեք քարտը, որպեսզի դրա QR-ը կամ շտրիխ կոդը պահվի այս հեռախոսում։</string>
+    <string name="cards_scan">Սկանավորել քարտը</string>
+    <string name="cards_add_photo">Ավելացնել լուսանկարից</string>
+    <string name="cards_add_manual">Ավելացնել ձեռքով</string>
+    <string name="cards_saved_locally">Պահվում է միայն այս հեռախոսում։</string>
+    <string name="cards_name">Քարտի անունը</string>
+    <string name="cards_code_type">Կոդի տեսակը</string>
+    <string name="cards_code_value">Կոդի արժեքը</string>
+    <string name="cards_note">Նշում</string>
+    <string name="cards_password_pin">Գաղտնաբառ / PIN / կոդ</string>
+    <string name="show_password">Ցույց տալ գաղտնաբառը</string>
+    <string name="hide_password">Թաքցնել գաղտնաբառը</string>
+    <string name="cards_save">Պահել քարտը</string>
+    <string name="cards_copy">Պատճենել կոդը</string>
+    <string name="cards_copied">Պատճենվեց</string>
+    <string name="cards_delete_title">Ջնջե՞լ քարտը</string>
+    <string name="cards_delete_message">Ջնջե՞լ «%1$s» քարտը այս հեռախոսից</string>
+    <string name="cards_duplicate_title">Քարտն արդեն պահված է</string>
+    <string name="cards_duplicate_message">Այս կոդն արդեն պահված է որպես «%1$s»։</string>
+    <string name="cards_open_existing">Բացել եղածը</string>
+    <string name="cards_save_duplicate">Պահել կրկնօրինակը</string>
+    <string name="cards_camera_permission_title">Պետք է տեսախցիկի թույլտվություն</string>
+    <string name="cards_camera_permission_message">Թույլատրեք տեսախցիկը՝ QR և շտրիխ կոդեր սկանավորելու համար։ Կարող եք նաև կոդն ավելացնել ձեռքով։</string>
+    <string name="cards_render_fallback_qr">Այս շտրիխ կոդի տեսակը հնարավոր չէ ցուցադրել։ Ցուցադրվում է որպես QR։</string>
+    <string name="cards_detected_code">Գտնված կոդ</string>
+    <string name="cards_type">Տեսակը</string>
+    <string name="cards_type_qr">QR</string>
+    <string name="cards_type_barcode">Շտրիխ կոդ</string>
+    <string name="cards_name_required">Մուտքագրեք քարտի անունը։</string>
+    <string name="cards_code_value_required">Մուտքագրեք կոդի արժեքը։</string>
+    <string name="cards_manual_barcode_hint">Ձեռքով ավելացված շտրիխ կոդերը պահվում են որպես CODE-128, եթե սկանից չեն եկել։</string>
+    <string name="cards_edit">Խմբագրել</string>
+    <string name="cards_edit_warning">Այստեղ կարող եք փոխել միայն քարտի անունը և նշումը։ Պահված կոդը չի փոխվում։</string>
+    <string name="cards_render_failed">Այս կոդը հնարավոր չէ ցուցադրել։</string>
+    <string name="cards_scan_again">Կրկին սկանավորել</string>
+    <string name="cards_try_again">Կրկին փորձել</string>
+    <string name="cards_scan_cancelled">Կոդ չի սկանավորվել։</string>
+    <string name="cards_scan_prompt">Սկանավորեք QR կամ շտրիխ կոդ</string>
+    <string name="cards_no_matches">Որոնմանը համապատասխան պահված քարտեր չկան։</string>
+    <string name="cards_photo_decode_failed">Այս նկարում QR կամ շտրիխ կոդ չգտնվեց։</string>
+
+    <!-- Sort / Edit list -->
     <string name="sort_shopping_list">Դասավորել ցուցակը</string>
+    <string name="shopping_edit_title">Խմբագրել գնումների ցուցակը</string>
+    <string name="shopping_edit_hint">Քաշեք բռնակը՝ վերադասավորելու · աղբամանի նշանը՝ ջնջելու հաստատումով</string>
+    <string name="shopping_delete_item_title">Ջնջե՞լ ապրանքը</string>
+    <string name="shopping_delete_item_message">Ջնջե՞լ «%1$s»-ը այս գնումների ցուցակից</string>
+    <string name="shopping_view_only_no_edit">Դուք կարող եք դիտել, բայց չեք կարող խմբ.</string>
+    <string name="action_auto_sort">Ավտո դասավ.</string>
+    <string name="action_edit">Խմբ.</string>
+    <string name="save_order">Պահել կարգը</string>
+    <string name="save_as_default_for_place">Պահել կանխ. կարգ</string>
+    <string name="saved_default_for">Պահված %1$s-ի համար</string>
 
     <!-- Dialogs -->
     <string name="cancel_task_title">Չեղարկե՞լ կիսատ խնդիրը</string>
@@ -168,6 +229,55 @@
     <string name="paste_invite_link">Տեղադրել հրավիրման հղում</string>
     <string name="arrival_sharing">Ժամանման կիսում</string>
     <string name="clear_task_learning_title">Մաքրե՞լ տեղական ուսուցումը</string>
+
+    <!-- Everywhere / time-based tasks -->
+    <string name="everywhere">Ամենուր</string>
+    <string name="everywhere_subtitle">Հիշեցում ըստ ամսաթվի — վայր պետք չէ</string>
+    <string name="time_based_tasks">Ժամանակային առաջադրանքներ</string>
+    <string name="recurring_tasks">Կրկնվող առաջադրանքներ</string>
+    <string name="add_recurring_task">Ավելացնել կրկնվող առաջադրանք</string>
+    <string name="add_recurring_task_title">Ավելացնել կրկնվող առաջադրանք</string>
+    <string name="edit_recurring_task_title">Խմբագրել կրկնվող առաջադրանքը</string>
+    <string name="edit_recurring_task">Խմբագրել կրկնվող առաջադրանքը</string>
+    <string name="recurring_task_note">Միայն ըստ ամսաթվի։ Վայր, գեոֆենս կամ տեղայնացում չի օգտագործվում։</string>
+    <string name="recurrence_type">Կրկնության տեսակ</string>
+    <string name="day_of_month">Ամսվա օր</string>
+    <string name="month">Ամիս</string>
+    <string name="day">Օր</string>
+    <string name="next_reminder">Հաջորդ հիշեցում</string>
+    <string name="recurring_empty">Կրկնվող առաջադրանքներ դեռ չկան</string>
+    <string name="due_date_required">Վերջնաժամկետ *</string>
+    <string name="everywhere_due_date_required">Ամենուր հիշեցումների համար վերջնաժամկետը պարտադիր է։</string>
+    <string name="everywhere_shopping_needs_type">Գնումների առաջադրանքի համար պետք է գոնե վայրի տեսակ ընտրել։</string>
+    <string name="recurrence_none">Մեկ անգամ</string>
+    <string name="recurrence_monthly">Ամսական</string>
+    <string name="recurrence_yearly">Տարեկան</string>
+    <string name="repeats_label">Կրկնություն.</string>
+    <string name="repeats_monthly_on" formatted="false">Ամեն ամիս %d%s-ին</string>
+    <string name="repeats_yearly_on" formatted="false">Ամեն տարի %s %d-ին</string>
+    <string name="exact_label">Կոնկրետ</string>
+    <string name="type_label">Տեսակ</string>
+    <string name="overdue">Ժամկետը անց</string>
+    <string name="due_soon">Շուտով</string>
+    <string name="due_today">Այսօր</string>
+    <string name="calendar_add_dialog_title">Ավելացնե՞լ Google Օրացույցում</string>
+    <string name="calendar_add_dialog_text">Ավելացնե՞լ «%s» որպես կատարված</string>
+    <string name="calendar_yes_add">Այո, ավելացնել</string>
+    <string name="calendar_done_failed">Խնդիրը կատարված է, սակայն Google Օրացույցը չի թարմացվել։</string>
+    <string name="discard_changes_title">Մերժե՞լ փոփոխությունները</string>
+    <string name="discard_changes_message">Ձեր փոփոխությունները չեն պահպանվել։</string>
+    <string name="discard">Չպահպանել</string>
+
+    <!-- Contacts / connection actions -->
+    <string name="action_cancel_request">Չեղարկել հայտը</string>
+    <string name="action_resend_request">Կրկին ուղարկել</string>
+    <string name="waiting_for_acceptance">Սպասում է հաստատման…</string>
+    <string name="connection_accepted_title">Կապը հաստատվեց</string>
+    <string name="connection_accepted_body">%s-ը հաստատեց ձեր կապի հայտը</string>
+    <string name="task_shared_notification_title">Խնդիրը կիսվեց ձեզ հետ</string>
+    <string name="task_shared_notification_body">%s-ը կիսվեց &#8220;%s&#8221;-ով ձեզ հետ</string>
+    <string name="healthier_item_icon">Ավելի առողջ ապրանք</string>
+    <string name="less_healthy_item_icon">Ավելի քիչ առողջ ապրանք</string>
 
     <!-- Share location from Maps -->
     <string name="share_place_title">Պահե՞լ կիսված վայրը</string>

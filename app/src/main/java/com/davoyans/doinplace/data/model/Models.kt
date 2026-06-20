@@ -1,22 +1,25 @@
 package com.davoyans.doinplace.data.model
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import com.davoyans.doinplace.data.db.Converters
 
 enum class TaskStatus { PENDING_ACCEPTANCE, ACTIVE, DONE, CANCELLED, REJECTED, EXPIRED }
-enum class ContactStatus { PENDING, ACCEPTED, BLOCKED }
+enum class ContactStatus { PENDING, ACCEPTED, BLOCKED, PENDING_SENT }
 enum class PlaceType { EXACT, MALL, DISTRICT, CUSTOM }
 enum class PlaceMode { EXACT, TYPE }
 enum class TaskPriority { URGENT, NO_RUSH }
 enum class TaskType { SIMPLE, SHOPPING_LIST }
+enum class RecurrenceType { NONE, MONTHLY, YEARLY }
+enum class TaskTriggerMode { PLACE_BASED, PLACE_TYPE_BASED, EVERYWHERE_TIME_BASED }
 enum class TaskEventType {
     CREATED, ACCEPTED, REJECTED, ARRIVED_NEAR_PLACE, REMINDED,
     PLACE_REMINDER_AUTO_DISMISSED,
     DUE_REMINDER_SHOWN,
     NOTIFICATION_OPENED,
-    DONE, CANCELLED, EXPIRED
+    DONE, CANCELLED, EXPIRED, FORCE_DONE_INCOMPLETE
 }
 
 @Entity(tableName = "saved_places")
@@ -31,6 +34,25 @@ data class SavedPlace(
     val placeType: PlaceType = PlaceType.CUSTOM,
     val provider: String = "",
     val deleted: Boolean = false,
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis()
+)
+
+@Entity(
+    tableName = "saved_cards",
+    indices = [
+        Index(value = ["name"]),
+        Index(value = ["codeValue"])
+    ]
+)
+data class SavedCardEntity(
+    @PrimaryKey val id: String,
+    val name: String,
+    val codeType: String,
+    val barcodeFormat: String? = null,
+    val codeValue: String,
+    val note: String? = null,
+    val passwordOrPinEncrypted: String? = null,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 )
@@ -70,8 +92,20 @@ data class Task(
     val placeMode: PlaceMode = PlaceMode.EXACT,
     val placeTypeId: String? = null,
     val placeTypeName: String? = null,
-    val taskType: TaskType = TaskType.SIMPLE
-)
+    val taskType: TaskType = TaskType.SIMPLE,
+    val isEverywhere: Boolean = false,
+    val recurrenceType: RecurrenceType = RecurrenceType.NONE,
+    val recurrenceDayOfMonth: Int? = null,
+    val recurrenceMonth: Int? = null,
+    val lastCompletedAt: Long? = null,
+    val calendarEventId: String? = null
+) {
+    val triggerMode: TaskTriggerMode get() = when {
+        isEverywhere -> TaskTriggerMode.EVERYWHERE_TIME_BASED
+        placeMode == PlaceMode.TYPE -> TaskTriggerMode.PLACE_TYPE_BASED
+        else -> TaskTriggerMode.PLACE_BASED
+    }
+}
 
 @Entity(tableName = "task_events")
 data class TaskEvent(
@@ -142,6 +176,30 @@ data class ShoppingListItem(
     val normalizedText: String,
     val orderIndex: Int,
     val checked: Boolean = false,
+    val checkedByUserId: String? = null,
+    val checkedByDisplayName: String? = null,
+    val checkedAt: Long? = null,
+    val updatedByUserId: String? = null,
+    val syncStatus: String = "SYNCED",
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis(),
+    val addedByUserId: String? = null,
+    val addedByDisplayName: String? = null,
+    val addedAt: Long? = null,
+    val originColorKey: String? = null,
+    val deletedAt: Long? = null,
+    val deletedByUserId: String? = null
+)
+
+@Entity(tableName = "task_shares", indices = [androidx.room.Index(value = ["taskId", "sharedWithUserId"], unique = true)])
+data class TaskShare(
+    @PrimaryKey val id: String,
+    val taskId: String,
+    val ownerUserId: String,
+    val sharedWithUserId: String,
+    val sharedWithDisplayName: String = "",
+    val permission: String = "EDIT",
+    val status: String = "ACTIVE",
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 )
@@ -156,6 +214,28 @@ data class ShoppingPlaceItemOrder(
     val orderRank: Int,
     val useCount: Int = 1,
     val lastUsedAt: Long = System.currentTimeMillis()
+)
+
+@Entity(
+    tableName = "task_place_notification_rules",
+    indices = [Index(
+        value = ["taskId", "exactPlaceKey", "ruleType"],
+        unique = true,
+        name = "index_task_place_notification_rules_taskId_exactPlaceKey_ruleType"
+    )]
+)
+data class TaskPlaceNotificationRule(
+    @PrimaryKey val id: String,
+    val taskId: String,
+    val exactPlaceKey: String,
+    val placeId: String? = null,
+    val placeName: String,
+    val ruleType: String,          // SNOOZE_HERE | MUTE_HERE
+    val snoozedUntil: Long? = null,
+    val active: Boolean = true,
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis(),
+    val createdByUserId: String? = null
 )
 
 @Entity(tableName = "user_task_suggestions")

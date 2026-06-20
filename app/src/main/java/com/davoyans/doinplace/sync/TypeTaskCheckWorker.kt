@@ -11,13 +11,16 @@ import com.davoyans.doinplace.data.location.GeoapifyPlaceSearchProvider
 import com.davoyans.doinplace.data.model.PlaceMode
 import com.davoyans.doinplace.data.model.TaskEvent
 import com.davoyans.doinplace.data.model.TaskEventType
+import com.davoyans.doinplace.data.model.TaskType
 import com.davoyans.doinplace.data.model.TaskStatus
 import com.davoyans.doinplace.data.places.PlaceTypeEngine
 import com.davoyans.doinplace.data.remote.SupabaseAuthClient
 import com.davoyans.doinplace.engine.ContextAwareReminderEngine
 import com.davoyans.doinplace.notification.NotificationHelper
-import com.davoyans.doinplace.util.DiagLog
 import com.davoyans.doinplace.notification.SnoozeAlarmReceiver
+import com.davoyans.doinplace.util.DiagLog
+import com.davoyans.doinplace.util.PlaceLabelResolver
+import com.davoyans.doinplace.util.ReminderItemFilter
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.tasks.await
 import java.time.LocalTime
@@ -156,16 +159,27 @@ class TypeTaskCheckWorker(
                 engine.recordOutcome(task, snapshot, engine.computeDueUrgency(task, snapshot.nowMillis), decision, uid)
                 if (!decision.shouldNotify) continue
 
-                val placeLabel = buildString {
-                    append(triggeringPlace.title)
-                    val addr = triggeringPlace.formattedAddress
-                    if (addr.isNotBlank() && addr != triggeringPlace.title) {
-                        append(" — ")
-                        append(addr)
-                    }
+                if (task.taskType == TaskType.SHOPPING_LIST) {
+                    val reminderItems = ReminderItemFilter.activeItems(task.id, db.shoppingListItemDao().getForTaskIncludingDeleted(task.id))
+                    if (reminderItems.isEmpty()) continue
                 }
+                val resolvedPlace = PlaceLabelResolver.resolve(
+                    exactPlaceName = triggeringPlace.title,
+                    exactPlaceAddress = triggeringPlace.formattedAddress,
+                    savedPlaceName = task.placeName,
+                    providerPlaceName = triggeringPlace.title,
+                    placeTypeName = task.placeTypeName
+                )
                 NotificationHelper.showPlaceReminderNotification(
-                    ctx, task.id, task.title, placeLabel, task.priority,
+                    context = ctx,
+                    taskId = task.id,
+                    taskTitle = task.title,
+                    exactPlaceName = resolvedPlace.primaryName,
+                    exactPlaceAddress = resolvedPlace.address,
+                    savedPlaceName = task.placeName,
+                    providerPlaceName = triggeringPlace.title,
+                    placeTypeName = task.placeTypeName,
+                    priority = task.priority,
                     placeLat = triggeringPlace.latitude,
                     placeLng = triggeringPlace.longitude
                 )

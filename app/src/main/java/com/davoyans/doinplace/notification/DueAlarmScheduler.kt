@@ -33,6 +33,8 @@ object DueAlarmScheduler {
     private val ALL_OFFSETS      = (FIXED_OFFSETS + SEQUENCE_OFFSETS).distinct().sorted()
 
     fun scheduleForTask(context: Context, task: Task) {
+        // Everywhere tasks use TimeBasedTaskScheduler instead (date-only, hourly, no exact time needed)
+        if (task.isEverywhere) return
         val dueMs = parseDueTimeMs(task) ?: return
         cancelForTask(context, task.id)          // clear stale alarms first
 

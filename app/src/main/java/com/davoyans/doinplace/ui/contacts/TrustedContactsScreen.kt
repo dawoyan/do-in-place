@@ -26,6 +26,7 @@ import com.davoyans.doinplace.data.model.ContactDisplayPref
 import com.davoyans.doinplace.data.model.ContactStatus
 import com.davoyans.doinplace.data.model.TrustedContact
 import com.davoyans.doinplace.data.repository.ContactDisplayRepository
+import com.davoyans.doinplace.ui.common.MaxBrightnessWhileVisible
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
@@ -64,22 +65,28 @@ fun TrustedContactsScreen(
     onInviteByEmail: (email: String) -> Unit,
     onPasteInvite: (String) -> Unit,
     onAcceptInvite: (TrustedContact) -> Unit,
+    onAcceptWithNickname: (TrustedContact, String) -> Unit = { c, _ -> onAcceptInvite(c) },
     onRejectInvite: (TrustedContact) -> Unit,
+    onCancelInvite: (TrustedContact) -> Unit = {},
+    onResendInvite: (TrustedContact) -> Unit = {},
     onRemoveContact: (TrustedContact) -> Unit,
     onEditContact: (TrustedContact) -> Unit = {},
     onCreateInviteCode: (suspend () -> String)? = null,
     onLookupInviteCode: (suspend (String) -> InviteCodeLookupResult)? = null,
     onRedeemInviteCode: (suspend (String, String, String, String) -> Unit)? = null,
     onRefresh: () -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    bottomBar: @Composable () -> Unit = {}
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
     // ── Dialog / loading state ─────────────────────────────────────────────
-    var pendingRemove         by remember { mutableStateOf<TrustedContact?>(null) }
-    var isRefreshing          by remember { mutableStateOf(false) }
+    var pendingRemove          by remember { mutableStateOf<TrustedContact?>(null) }
+    var pendingAcceptContact   by remember { mutableStateOf<TrustedContact?>(null) }
+    var pendingAcceptNickname  by remember { mutableStateOf("") }
+    var isRefreshing           by remember { mutableStateOf(false) }
 
     // Create invite code
     var isGeneratingCode      by remember { mutableStateOf(false) }
@@ -118,6 +125,54 @@ fun TrustedContactsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { pendingRemove = null }) { Text(stringResource(R.string.cancel)) }
+            }
+        )
+    }
+
+    // ── Accept with nickname dialog ───────────────────────────────────────
+    pendingAcceptContact?.let { contact ->
+        val pref = displayPrefs.find { it.contactUserId == contact.contactUserId }
+        val display = ContactDisplayRepository.resolveDisplay(contact.contactUserId, contact, pref)
+        val primaryLabel = contact.contactEmail.ifBlank { display.primary }
+        AlertDialog(
+            onDismissRequest = { pendingAcceptContact = null; pendingAcceptNickname = "" },
+            title = { Text("Accept connection") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("$primaryLabel wants to connect.", style = MaterialTheme.typography.bodyMedium)
+                    if (contact.contactEmail.isNotBlank() && primaryLabel != contact.contactEmail) {
+                        Text(
+                            contact.contactEmail,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+                    OutlinedTextField(
+                        value = pendingAcceptNickname,
+                        onValueChange = { pendingAcceptNickname = it },
+                        label = { Text("Nickname (optional)") },
+                        placeholder = { Text("e.g. Mom, Work, etc.") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    val c = contact
+                    val nick = pendingAcceptNickname.trim()
+                    pendingAcceptContact = null
+                    pendingAcceptNickname = ""
+                    onAcceptWithNickname(c, nick)
+                    scope.launch {
+                        snackbarHostState.showSnackbar("Connected with ${display.primary.ifBlank { primaryLabel }}!")
+                    }
+                }) { Text(stringResource(R.string.accept)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingAcceptContact = null; pendingAcceptNickname = "" }) {
+                    Text(stringResource(R.string.cancel))
+                }
             }
         )
     }
@@ -232,6 +287,7 @@ fun TrustedContactsScreen(
 
     // ── QR dialog (QR encodes the invite code) ─────────────────────────────
     if (showQrDialog && generatedCode.isNotBlank()) {
+        MaxBrightnessWhileVisible()
         val qrBitmap = remember(generatedCode) { buildQrBitmap(generatedCode) }
         fun copyCode() {
             val clip = android.content.ClipData.newPlainText("invite_code", generatedCode)
@@ -499,8 +555,18 @@ fun TrustedContactsScreen(
     val selfEmail = currentUserEmail.lowercase()
     fun isSelf(c: TrustedContact) = c.contactUserId == currentUserId ||
             (selfEmail.isNotBlank() && c.contactEmail.lowercase() == selfEmail)
-    val accepted = contacts.filter { it.status == ContactStatus.ACCEPTED && !isSelf(it) }
-    val pending  = contacts.filter { it.status == ContactStatus.PENDING && !isSelf(it) }
+    val accepted     = contacts.filter { it.status == ContactStatus.ACCEPTED && !isSelf(it) }
+    val pending      = contacts.filter { it.status == ContactStatus.PENDING && !isSelf(it) }
+    val pendingSent  = contacts.filter { it.status == ContactStatus.PENDING_SENT && !isSelf(it) }
+
+    // Auto-close QR dialog when UserB's connection request arrives
+    var lastKnownPendingSize by remember { mutableIntStateOf(pending.size) }
+    LaunchedEffect(pending.size) {
+        if (showQrDialog && pending.size > lastKnownPendingSize) {
+            showQrDialog = false
+        }
+        lastKnownPendingSize = pending.size
+    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -511,7 +577,8 @@ fun TrustedContactsScreen(
                     IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Back") }
                 }
             )
-        }
+        },
+        bottomBar = bottomBar
     ) { padding ->
         androidx.compose.material3.pulltorefresh.PullToRefreshBox(
             isRefreshing = isRefreshing,
@@ -646,27 +713,61 @@ fun TrustedContactsScreen(
                     }
                 }
 
-                if (pending.isNotEmpty()) {
-                    item { SectionHeader("Pending (${pending.size})") }
-                    item {
-                        Text(
-                            "After accepting, ask the other person to scan your QR or enter your code so you appear in their list.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                            modifier = Modifier.padding(bottom = 2.dp)
-                        )
+                if (pendingSent.isNotEmpty()) {
+                    item { SectionHeader("Sent (${pendingSent.size})") }
+                    items(pendingSent, key = { it.id }) { contact ->
+                        val pref = displayPrefs.find { it.contactUserId == contact.contactUserId }
+                        ContactCard(contact, pref, actions = {
+                            Column(
+                                horizontalAlignment = Alignment.End,
+                                verticalArrangement = Arrangement.spacedBy(0.dp)
+                            ) {
+                                Text(
+                                    "Waiting for acceptance…",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                                    modifier = Modifier.padding(end = 4.dp)
+                                )
+                                Row {
+                                    TextButton(
+                                        onClick = {
+                                            onCancelInvite(contact)
+                                            scope.launch {
+                                                snackbarHostState.showSnackbar("Request cancelled")
+                                            }
+                                        },
+                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+                                    ) {
+                                        Text("Cancel request",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.error)
+                                    }
+                                    TextButton(
+                                        onClick = {
+                                            onResendInvite(contact)
+                                            scope.launch {
+                                                snackbarHostState.showSnackbar("Request resent")
+                                            }
+                                        },
+                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+                                    ) {
+                                        Text("Resend",
+                                            style = MaterialTheme.typography.labelSmall)
+                                    }
+                                }
+                            }
+                        })
                     }
+                }
+
+                if (pending.isNotEmpty()) {
+                    item { SectionHeader("Requests (${pending.size})") }
                     items(pending, key = { it.id }) { contact ->
                         val pref = displayPrefs.find { it.contactUserId == contact.contactUserId }
                         ContactCard(contact, pref, actions = {
                             TextButton(onClick = {
-                                onAcceptInvite(contact)
-                                scope.launch {
-                                    snackbarHostState.showSnackbar(
-                                        message = "Connected! Ask ${contact.contactDisplayName.ifBlank { "them" }} to share their code with you too",
-                                        duration = SnackbarDuration.Long
-                                    )
-                                }
+                                pendingAcceptContact = contact
+                                pendingAcceptNickname = ""
                             }) { Text(stringResource(R.string.accept)) }
                             TextButton(onClick = { onRejectInvite(contact) }) { Text(stringResource(R.string.decline)) }
                         })
@@ -685,7 +786,7 @@ fun TrustedContactsScreen(
                     }
                 }
 
-                if (contacts.isEmpty()) {
+                if (accepted.isEmpty() && pending.isEmpty() && pendingSent.isEmpty()) {
                     item {
                         Box(
                             Modifier.fillParentMaxWidth().height(160.dp),
@@ -737,11 +838,7 @@ private fun ContactCard(contact: TrustedContact, pref: ContactDisplayPref?, acti
     Card(Modifier.fillMaxWidth()) {
         Row(Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                iconIdToVector(pref?.iconId ?: "person"), null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(28.dp)
-            )
+            ContactAvatar(iconId = pref?.iconId ?: "person", displayName = displayName, size = 28.dp)
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
                 Text(displayName, fontWeight = FontWeight.Medium)
@@ -762,28 +859,17 @@ private fun ContactCard(
     onEdit: () -> Unit,
     onRemove: () -> Unit
 ) {
-    val displayName = ContactDisplayRepository.resolveDisplayName(contact.contactUserId, contact, pref)
+    val display = ContactDisplayRepository.resolveDisplay(contact.contactUserId, contact, pref)
     Card(Modifier.fillMaxWidth()) {
         Row(Modifier.padding(start = 12.dp, top = 10.dp, bottom = 10.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                iconIdToVector(pref?.iconId ?: "person"), null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(28.dp)
-            )
+            ContactAvatar(iconId = pref?.iconId ?: "person", displayName = display.primary, size = 28.dp)
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
-                Text(displayName, fontWeight = FontWeight.Medium)
-                if (contact.contactEmail.isNotBlank()) {
-                    Text(contact.contactEmail, style = MaterialTheme.typography.bodySmall,
+                Text(display.primary, fontWeight = FontWeight.Medium)
+                display.secondaryEmail?.let { email ->
+                    Text(email, style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
-                }
-                if (!pref?.nickname.isNullOrBlank()) {
-                    Text(
-                        "Nickname: ${pref!!.nickname}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
-                    )
                 }
             }
             IconButton(onClick = onEdit, modifier = Modifier.size(36.dp)) {

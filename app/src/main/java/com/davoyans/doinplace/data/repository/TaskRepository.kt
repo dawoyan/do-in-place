@@ -84,6 +84,18 @@ class TaskRepository(private val db: AppDatabase) {
         ))
     }
 
+    suspend fun markForceDone(id: String, actorUid: String, uncheckedCount: Int) {
+        db.taskDao().updateStatus(id, TaskStatus.DONE.name)
+        db.taskEventDao().insert(TaskEvent(
+            id = UUID.randomUUID().toString(),
+            taskId = id,
+            type = TaskEventType.FORCE_DONE_INCOMPLETE,
+            actorUserId = actorUid,
+            reason = "unchecked=$uncheckedCount",
+            synced = false
+        ))
+    }
+
     /** Log that the user arrived near the place (only if arrival sharing is on). */
     suspend fun logArrival(taskId: String, actorUid: String) {
         db.taskDao().touchReminderShown(taskId)

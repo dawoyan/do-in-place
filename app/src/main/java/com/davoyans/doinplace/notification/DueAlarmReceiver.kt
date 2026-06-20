@@ -8,9 +8,12 @@ import com.davoyans.doinplace.data.model.PlaceMode
 import com.davoyans.doinplace.data.model.Task
 import com.davoyans.doinplace.data.model.TaskEvent
 import com.davoyans.doinplace.data.model.TaskEventType
+import com.davoyans.doinplace.data.model.TaskType
 import com.davoyans.doinplace.data.model.TaskStatus
 import com.davoyans.doinplace.data.remote.SupabaseAuthClient
 import com.davoyans.doinplace.engine.ContextAwareReminderEngine
+import com.davoyans.doinplace.util.PlaceLabelResolver
+import com.davoyans.doinplace.util.ReminderItemFilter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -26,6 +29,10 @@ class DueAlarmReceiver : BroadcastReceiver() {
             val db   = AppDatabase.get(context)
             val task = db.taskDao().getById(taskId) ?: return@launch
             if (task.status != TaskStatus.ACTIVE) return@launch
+            if (task.taskType == TaskType.SHOPPING_LIST) {
+                val reminderItems = ReminderItemFilter.activeItems(task.id, db.shoppingListItemDao().getForTaskIncludingDeleted(task.id))
+                if (reminderItems.isEmpty()) return@launch
+            }
 
             // Context-aware gate (no location for due-date alarms — uses time/priority rules only)
             val engine   = ContextAwareReminderEngine(context, db)
@@ -63,9 +70,12 @@ class DueAlarmReceiver : BroadcastReceiver() {
 
     private fun buildPlaceText(task: Task): String? = when (task.placeMode) {
         PlaceMode.EXACT -> {
-            val name = task.placeName.takeIf { it.isNotBlank() } ?: return null
-            val addr = task.address?.takeIf { it.isNotBlank() }
-            if (addr != null && addr != name) "$name, $addr" else name
+            val resolved = PlaceLabelResolver.resolve(
+                exactPlaceName = task.placeName,
+                exactPlaceAddress = task.address,
+                savedPlaceName = task.placeName
+            )
+            if (resolved.address != null) "${resolved.primaryName}, ${resolved.address}" else resolved.primaryName
         }
         PlaceMode.TYPE -> {
             // Live nearby search not feasible from a BroadcastReceiver in Doze mode;

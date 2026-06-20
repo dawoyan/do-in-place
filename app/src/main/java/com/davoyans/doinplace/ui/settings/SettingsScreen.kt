@@ -7,6 +7,7 @@ import android.provider.Settings
 import com.davoyans.doinplace.BuildConfig
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Archive
@@ -18,6 +19,7 @@ import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import com.davoyans.doinplace.R
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -63,12 +65,25 @@ fun SettingsScreen(
     onLanguageChanged: (String) -> Unit = {},
     onOpenArchive: () -> Unit,
     onDeleteLocalData: () -> Unit,
+    onDeleteAccount: (onError: (String) -> Unit) -> Unit,
+    healthyLifeEnabled: Boolean = false,
+    onHealthyLifeEnabledChanged: (Boolean) -> Unit = {},
+    healthyFoodEnabled: Boolean = false,
+    onHealthyFoodEnabledChanged: (Boolean) -> Unit = {},
+    walkReminderEnabled: Boolean = false,
+    onWalkReminderEnabledChanged: (Boolean) -> Unit = {},
     onLogout: () -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    bottomBar: @Composable () -> Unit = {}
 ) {
     val context = LocalContext.current
     var showClearLearningDialog by remember { mutableStateOf(false) }
     var showDeleteLocalDataDialog by remember { mutableStateOf(false) }
+    var showDeleteAccountStep1 by remember { mutableStateOf(false) }
+    var showDeleteAccountStep2 by remember { mutableStateOf(false) }
+    var deleteConfirmText by remember { mutableStateOf("") }
+    var deletingAccount by remember { mutableStateOf(false) }
+    var deleteAccountError by remember { mutableStateOf("") }
 
     if (showDeleteLocalDataDialog) {
         AlertDialog(
@@ -83,6 +98,71 @@ fun SettingsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteLocalDataDialog = false }) { Text(stringResource(R.string.cancel)) }
+            }
+        )
+    }
+
+    if (showDeleteAccountStep1) {
+        AlertDialog(
+            onDismissRequest = { showDeleteAccountStep1 = false },
+            title = { Text("Delete account and all data?") },
+            text = {
+                Text(
+                    "This will permanently remove your Do In Place tasks, shopping lists, shares, contacts, device tokens, and account data from Supabase. This cannot be undone.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = {
+                Button(onClick = {
+                    showDeleteAccountStep1 = false
+                    deleteConfirmText = ""
+                    showDeleteAccountStep2 = true
+                }) { Text("Continue") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteAccountStep1 = false }) { Text("Cancel") }
+            }
+        )
+    }
+
+    if (showDeleteAccountStep2) {
+        AlertDialog(
+            onDismissRequest = { showDeleteAccountStep2 = false },
+            title = { Text("Type DELETE to confirm") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        "This action is irreversible. Type DELETE in the field below to permanently delete your account and all associated data.",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    OutlinedTextField(
+                        value = deleteConfirmText,
+                        onValueChange = { deleteConfirmText = it },
+                        placeholder = { Text("DELETE") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteAccountStep2 = false
+                        deletingAccount = true
+                        deleteAccountError = ""
+                        onDeleteAccount { errorMsg ->
+                            deletingAccount = false
+                            deleteAccountError = errorMsg
+                        }
+                    },
+                    enabled = deleteConfirmText == "DELETE",
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) { Text("Delete forever") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteAccountStep2 = false }) { Text("Cancel") }
             }
         )
     }
@@ -143,7 +223,8 @@ fun SettingsScreen(
                     IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Back") }
                 }
             )
-        }
+        },
+        bottomBar = bottomBar
     ) { padding ->
         Column(
             Modifier
@@ -389,6 +470,35 @@ fun SettingsScreen(
                 }
             }
 
+            // ── Healthy life ──────────────────────────────────────────────────
+            HorizontalDivider()
+            SectionTitle("Healthy Life")
+            Text(
+                "Healthy life suggestions are optional. The app gives gentle reminders and food hints. It does not block items or judge your choices.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+            )
+            SmartToggleRow(
+                label    = "Healthy life suggester",
+                detail   = "Enable all healthy life features",
+                checked  = healthyLifeEnabled,
+                onChange = onHealthyLifeEnabledChanged
+            )
+            if (healthyLifeEnabled) {
+                SmartToggleRow(
+                    label    = "Healthy food suggestions",
+                    detail   = "Show 🙂 / 😟 icons next to shopping list items",
+                    checked  = healthyFoodEnabled,
+                    onChange = onHealthyFoodEnabledChanged
+                )
+                SmartToggleRow(
+                    label    = "Walk / stand reminders",
+                    detail   = "Gentle reminder after 60+ min of no movement (max 3/day, 90-min cooldown)",
+                    checked  = walkReminderEnabled,
+                    onChange = onWalkReminderEnabledChanged
+                )
+            }
+
             // ── Archive ───────────────────────────────────────────────────────
             HorizontalDivider()
             SectionTitle("Archive")
@@ -436,8 +546,41 @@ fun SettingsScreen(
             }
 
             HorizontalDivider()
+            SectionTitle("Account")
             OutlinedButton(onClick = { showDeleteLocalDataDialog = true }, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.delete_local_data), color = MaterialTheme.colorScheme.error)
+            }
+            if (deletingAccount) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                    Text(
+                        "Deleting account and data…",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                }
+            } else {
+                OutlinedButton(
+                    onClick = { showDeleteAccountStep1 = true; deleteAccountError = "" },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Delete my account and all data")
+                }
+                if (deleteAccountError.isNotBlank()) {
+                    Text(
+                        deleteAccountError,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(horizontal = 4.dp)
+                    )
+                }
             }
             Button(
                 onClick = onLogout, modifier = Modifier.fillMaxWidth(),

@@ -21,11 +21,18 @@
     <!-- WorkManager exact alarms (optional, used for time-window reminders) -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
+    <!-- Cards / barcode scanning -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
     <!-- Activity Recognition — used by smart reminder engine for driving/walking detection (API 29+) -->
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
 
     <!-- Vibrate on delete-confirm dialog and notifications -->
     <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- Google Calendar — write done-history events for Everywhere tasks -->
+    <uses-permission android:name="android.permission.READ_CALENDAR" />
+    <uses-permission android:name="android.permission.WRITE_CALENDAR" />
 
     <application
         android:name=".ReminderApplication"
@@ -99,6 +106,21 @@
         <!-- Due-date alarm receiver -->
         <receiver
             android:name=".notification.DueAlarmReceiver"
+            android:exported="false" />
+
+        <!-- Everywhere (time-based) hourly reminder receiver -->
+        <receiver
+            android:name=".notification.EverywhereReminderReceiver"
+            android:exported="false" />
+
+        <!-- Usual shopping notification actions (Create list / Not now) -->
+        <receiver
+            android:name=".notification.UsualShoppingActionReceiver"
+            android:exported="false" />
+
+        <!-- Walk/stand reminder actions (Mute today / Remind later) -->
+        <receiver
+            android:name=".notification.WalkReminderActionReceiver"
             android:exported="false" />
 
         <!-- Share image → OCR flow -->

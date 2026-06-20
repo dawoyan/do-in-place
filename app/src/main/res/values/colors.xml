@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Matches the top-left blue of the launcher icon gradient -->
-    <color name="ic_launcher_bg">#1A9FE0</color>
+    <color name="ic_launcher_bg">#FFFFFF</color>
 </resources>

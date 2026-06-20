@@ -4,6 +4,7 @@ import androidx.room.TypeConverter
 import com.davoyans.doinplace.data.model.ContactStatus
 import com.davoyans.doinplace.data.model.PlaceMode
 import com.davoyans.doinplace.data.model.PlaceType
+import com.davoyans.doinplace.data.model.RecurrenceType
 import com.davoyans.doinplace.data.model.TaskEventType
 import com.davoyans.doinplace.data.model.TaskPriority
 import com.davoyans.doinplace.data.model.TaskStatus
@@ -14,7 +15,7 @@ class Converters {
     @TypeConverter fun toTaskStatus(v: String) = TaskStatus.valueOf(v)
 
     @TypeConverter fun fromContactStatus(v: ContactStatus) = v.name
-    @TypeConverter fun toContactStatus(v: String) = ContactStatus.valueOf(v)
+    @TypeConverter fun toContactStatus(v: String) = runCatching { ContactStatus.valueOf(v) }.getOrDefault(ContactStatus.PENDING)
 
     @TypeConverter fun fromPlaceType(v: PlaceType) = v.name
     @TypeConverter fun toPlaceType(v: String) = PlaceType.valueOf(v)
@@ -34,4 +35,7 @@ class Converters {
 
     @TypeConverter fun fromTaskType(v: TaskType) = v.name
     @TypeConverter fun toTaskType(v: String) = runCatching { TaskType.valueOf(v) }.getOrDefault(TaskType.SIMPLE)
+
+    @TypeConverter fun fromRecurrenceType(v: RecurrenceType) = v.name
+    @TypeConverter fun toRecurrenceType(v: String) = runCatching { RecurrenceType.valueOf(v) }.getOrDefault(RecurrenceType.NONE)
 }

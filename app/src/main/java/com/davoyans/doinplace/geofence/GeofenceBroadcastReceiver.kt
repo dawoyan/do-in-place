@@ -8,12 +8,16 @@ import com.davoyans.doinplace.data.db.AppDatabase
 import com.davoyans.doinplace.data.model.Task
 import com.davoyans.doinplace.data.model.TaskEvent
 import com.davoyans.doinplace.data.model.TaskEventType
+import com.davoyans.doinplace.data.model.TaskType
 import com.davoyans.doinplace.data.model.TaskStatus
 import com.davoyans.doinplace.data.remote.SupabaseAuthClient
 import com.davoyans.doinplace.engine.ContextAwareReminderEngine
+import com.davoyans.doinplace.engine.UsualShoppingEngine
 import com.davoyans.doinplace.notification.NotificationHelper
 import com.davoyans.doinplace.notification.SnoozeAlarmReceiver
 import com.davoyans.doinplace.util.DiagLog
+import com.davoyans.doinplace.util.PlaceLabelResolver
+import com.davoyans.doinplace.util.ReminderItemFilter
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingEvent
 import com.google.android.gms.location.LocationServices
@@ -75,6 +79,23 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
         val snapshot = engine.buildSnapshot(currentLocation)
         val uid     = SupabaseAuthClient(context).getCurrentUserId() ?: ""
 
+        // Check usual shopping suggestion for grocery place types
+        val usualShoppingEngine = UsualShoppingEngine(db)
+        for (taskId in triggeredIds) {
+            val task = db.taskDao().getById(taskId) ?: continue
+            val placeTypeKey = task.placeTypeId ?: continue
+            if (!usualShoppingEngine.isGroceryType(placeTypeKey)) continue
+            val prefs = context.getSharedPreferences("dip_prefs", Context.MODE_PRIVATE)
+            if (!prefs.getBoolean("usual_shopping_enabled", true)) continue
+            runCatching {
+                if (usualShoppingEngine.shouldSuggest(uid, placeTypeKey)) {
+                    val placeName = task.placeName.ifBlank { "the store" }
+                    NotificationHelper.showUsualShoppingNotification(context, placeTypeKey, placeName)
+                    usualShoppingEngine.suppressForToday(uid, placeTypeKey)
+                }
+            }
+        }
+
         for (taskId in triggeredIds) {
             val task = db.taskDao().getById(taskId) ?: continue
             if (task.status != TaskStatus.ACTIVE) continue
@@ -83,10 +104,28 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
             val distanceMeters = computeDistance(currentLocation, task)
             if (!shouldShowReminder(task, currentLocation)) continue
 
-            val placeLabel = buildString {
-                append(task.placeName)
-                val addr = task.address
-                if (!addr.isNullOrBlank() && addr != task.placeName) { append(" — "); append(addr) }
+            if (task.taskType == TaskType.SHOPPING_LIST) {
+                val reminderItems = ReminderItemFilter.activeItems(task.id, db.shoppingListItemDao().getForTaskIncludingDeleted(task.id))
+                if (reminderItems.isEmpty()) continue
+            }
+            val resolvedPlace = PlaceLabelResolver.resolve(
+                exactPlaceName = task.placeName,
+                exactPlaceAddress = task.address,
+                savedPlaceName = task.placeName
+            )
+
+            // Check exact-place notification rules (MUTE_HERE / SNOOZE_HERE)
+            val exactPlaceKey = task.placeId ?: "${task.id}"
+            val now = System.currentTimeMillis()
+            val muteRule = db.taskPlaceNotificationRuleDao().getRule(task.id, exactPlaceKey, "MUTE_HERE")
+            if (muteRule != null && muteRule.active) {
+                DiagLog.d("PLACE_NOTIFY", "suppressed rule=MUTE_HERE taskId=${task.id.take(8)} key=$exactPlaceKey")
+                continue
+            }
+            val snoozeRule = db.taskPlaceNotificationRuleDao().getRule(task.id, exactPlaceKey, "SNOOZE_HERE")
+            if (snoozeRule != null && snoozeRule.active && (snoozeRule.snoozedUntil ?: 0L) > now) {
+                DiagLog.d("PLACE_NOTIFY", "suppressed rule=SNOOZE_HERE until=${snoozeRule.snoozedUntil} taskId=${task.id.take(8)}")
+                continue
             }
 
             // Context-aware gate
@@ -99,11 +138,19 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
             engine.recordOutcome(task, snapshot, engine.computeDueUrgency(task, snapshot.nowMillis), decision, uid)
             if (!decision.shouldNotify) continue
 
+            DiagLog.d("PLACE_NOTIFY", "shown taskId=${task.id.take(8)} exactPlaceKey=$exactPlaceKey")
             val hasCoords = task.latitude != 0.0 || task.longitude != 0.0
             NotificationHelper.showPlaceReminderNotification(
-                context, task.id, task.title, placeLabel, task.priority,
+                context = context,
+                taskId = task.id,
+                taskTitle = task.title,
+                exactPlaceName = resolvedPlace.primaryName,
+                exactPlaceAddress = resolvedPlace.address,
+                savedPlaceName = task.placeName,
+                priority = task.priority,
                 placeLat = if (hasCoords) task.latitude else null,
-                placeLng = if (hasCoords) task.longitude else null
+                placeLng = if (hasCoords) task.longitude else null,
+                exactPlaceKey = exactPlaceKey
             )
 
             SnoozeAlarmReceiver.scheduleFirstRepeat(context, task.id, task.priority)

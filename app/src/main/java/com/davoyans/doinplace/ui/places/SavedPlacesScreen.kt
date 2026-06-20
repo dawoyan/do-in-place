@@ -25,10 +25,12 @@ import kotlinx.coroutines.launch
 @Composable
 fun SavedPlacesScreen(
     places: List<SavedPlace>,
+    onOpenPlace: (SavedPlace) -> Unit,
     onDeletePlace: (SavedPlace) -> Unit,
     onAddPlace: () -> Unit,
     onRefresh: () -> Unit = {},
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    bottomBar: @Composable () -> Unit = {}
 ) {
     var pendingDelete by remember { mutableStateOf<SavedPlace?>(null) }
     var isRefreshing  by remember { mutableStateOf(false) }
@@ -60,11 +62,12 @@ fun SavedPlacesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.saved_places)) },
+                title = { Text(stringResource(R.string.places)) },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, stringResource(R.string.back)) } },
-                actions = { TextButton(onClick = onAddPlace) { Text("+ Add") } }
+                actions = { TextButton(onClick = onAddPlace) { Text(stringResource(R.string.add_place)) } }
             )
-        }
+        },
+        bottomBar = bottomBar
     ) { padding ->
         PullToRefreshBox(
             isRefreshing = isRefreshing,
@@ -94,7 +97,11 @@ fun SavedPlacesScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(places, key = { it.id }) { place ->
-                        PlaceRow(place, onDelete = { pendingDelete = place })
+                        PlaceRow(
+                            place = place,
+                            onOpen = { onOpenPlace(place) },
+                            onDelete = { pendingDelete = place }
+                        )
                     }
                 }
             }
@@ -103,8 +110,8 @@ fun SavedPlacesScreen(
 }
 
 @Composable
-private fun PlaceRow(place: SavedPlace, onDelete: () -> Unit) {
-    Card(Modifier.fillMaxWidth()) {
+private fun PlaceRow(place: SavedPlace, onOpen: () -> Unit, onDelete: () -> Unit) {
+    Card(onClick = onOpen, modifier = Modifier.fillMaxWidth()) {
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Default.Place, null, tint = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.width(12.dp))

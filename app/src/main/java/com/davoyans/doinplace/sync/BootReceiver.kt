@@ -7,6 +7,7 @@ import com.davoyans.doinplace.data.db.AppDatabase
 import com.davoyans.doinplace.data.remote.SupabaseAuthClient
 import com.davoyans.doinplace.geofence.LocationReminderManager
 import com.davoyans.doinplace.notification.DueAlarmScheduler
+import com.davoyans.doinplace.notification.TimeBasedTaskScheduler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -20,7 +21,11 @@ class BootReceiver : BroadcastReceiver() {
             LocationReminderManager(context).restoreOnBoot(uid)
             val activeTasks = AppDatabase.get(context).taskDao().getActiveTasks(uid)
             for (task in activeTasks) {
-                DueAlarmScheduler.scheduleForTask(context, task)
+                if (task.isEverywhere) {
+                    TimeBasedTaskScheduler.scheduleForTask(context, task)
+                } else {
+                    DueAlarmScheduler.scheduleForTask(context, task)
+                }
             }
         }
     }

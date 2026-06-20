@@ -18,13 +18,13 @@ object DiagLog {
 
     fun d(section: String, msg: String) {
         val line = "${fmt.format(Date())} [$section] $msg"
-        Log.d(TAG, line)
+        runCatching { Log.d(TAG, line) }
         append(line)
     }
 
     fun e(section: String, msg: String, t: Throwable? = null) {
         val line = "${fmt.format(Date())} [$section] ERROR: $msg${t?.let { " — ${it.javaClass.simpleName}: ${it.message?.take(120)}" } ?: ""}"
-        Log.e(TAG, line, t)
+        runCatching { Log.e(TAG, line, t) }
         append(line)
     }
 

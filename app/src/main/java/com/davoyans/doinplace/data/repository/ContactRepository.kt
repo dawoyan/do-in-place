@@ -14,6 +14,12 @@ class ContactRepository(private val db: AppDatabase) {
     suspend fun updateStatus(id: String, status: ContactStatus) =
         db.trustedContactDao().updateStatus(id, status.name)
 
+    suspend fun deleteById(id: String) =
+        db.trustedContactDao().deleteById(id)
+
+    suspend fun deleteByContactUserId(uid: String, contactUserId: String) =
+        db.trustedContactDao().deleteByContactUserId(uid, contactUserId)
+
     suspend fun deleteSelfContacts(uid: String) =
         db.trustedContactDao().deleteSelfContacts(uid)
 

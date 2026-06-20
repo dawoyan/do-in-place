@@ -29,6 +29,8 @@ class LocationReminderManager(context: Context) {
     /** Call when a task becomes active (created by self or accepted shared task). */
     suspend fun onTaskActivated(task: Task) {
         if (task.status != TaskStatus.ACTIVE) return
+        // Everywhere tasks use time-based scheduling only — no geofence
+        if (task.isEverywhere) return
         // TYPE tasks have no fixed geofence in v1 — type-based detection is handled separately
         if (task.placeMode == PlaceMode.TYPE) return
         if (task.latitude == 0.0 && task.longitude == 0.0) return
@@ -45,7 +47,8 @@ class LocationReminderManager(context: Context) {
      * Reads from Room only — no network call.
      */
     suspend fun restoreOnBoot(uid: String) {
-        val activeTasks = db.taskDao().getActiveTasks(uid).filter { it.placeMode == PlaceMode.EXACT }
+        val activeTasks = db.taskDao().getActiveTasks(uid)
+            .filter { !it.isEverywhere && it.placeMode == PlaceMode.EXACT }
         geofenceRepo.restoreAll(activeTasks)
     }
 

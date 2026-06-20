@@ -96,7 +96,10 @@ class SupabaseClient(private val context: Context) {
         taskTitle: String,
         actorUserId: String,
         actorName: String,
-        creatorUserId: String
+        actorEmail: String? = null,
+        creatorUserId: String,
+        targetUserId: String? = null,
+        taskType: TaskType? = null
     ) {
         val body = JSONObject().apply {
             put("event_type", eventType)
@@ -104,9 +107,49 @@ class SupabaseClient(private val context: Context) {
             put("task_title", taskTitle)
             put("actor_user_id", actorUserId)
             put("actor_name", actorName)
+            if (!actorEmail.isNullOrBlank()) put("actor_email", actorEmail)
             put("creator_user_id", creatorUserId)
+            if (targetUserId != null) put("target_user_id", targetUserId)
+            if (taskType != null) put("task_type", taskType.name)
         }
         callEdgeFunction("notify-task-event", body)
+    }
+
+    fun notifyConnectionRequest(toUserId: String, fromUserId: String, fromName: String, fromEmail: String) {
+        val body = JSONObject().apply {
+            put("event_type", "connection_request")
+            put("target_user_id", toUserId)
+            put("actor_user_id", fromUserId)
+            put("actor_name", fromName)
+            put("actor_email", fromEmail)
+            put("task_id", "")
+            put("task_title", "")
+            put("creator_user_id", fromUserId)
+        }
+        callEdgeFunction("notify-task-event", body)
+    }
+
+    fun notifyConnectionAccepted(toUserId: String, fromName: String, fromUserId: String) {
+        val body = JSONObject().apply {
+            put("event_type", "connection_accepted")
+            put("target_user_id", toUserId)
+            put("actor_user_id", fromUserId)
+            put("actor_name", fromName)
+            put("task_id", "")
+            put("task_title", "")
+            put("creator_user_id", fromUserId)
+        }
+        callEdgeFunction("notify-task-event", body)
+    }
+
+    fun cancelContactInvite(id: String) {
+        patch("/rest/v1/contact_invites?id=eq.$id",
+            JSONObject().put("status", "CANCELLED").put("updated_at", System.currentTimeMillis()))
+    }
+
+    fun resendContactInvite(id: String) {
+        patch("/rest/v1/contact_invites?id=eq.$id",
+            JSONObject().put("status", "PENDING").put("updated_at", System.currentTimeMillis()))
     }
 
     fun lookupUserByEmail(email: String): Pair<String, String>? {
@@ -125,7 +168,21 @@ class SupabaseClient(private val context: Context) {
     // ── Tasks ──────────────────────────────────────────────────────────────
 
     fun pushTask(task: Task) {
-        upsert("/rest/v1/tasks", taskToJson(task))
+        val useCompat = taskSchemaHasNewColumns == false
+        try {
+            upsert("/rest/v1/tasks", taskToJson(task, includeNewColumns = !useCompat))
+            if (taskSchemaHasNewColumns == null) taskSchemaHasNewColumns = true
+        } catch (e: Exception) {
+            val msg = e.message ?: ""
+            if ("PGRST204" in msg || "is_everywhere" in msg || "place_mode" in msg ||
+                "place_type_id" in msg || "place_type_name" in msg || "task_type" in msg) {
+                DiagLog.e("SUPABASE_SCHEMA", "new task columns missing — run migration 20260617000000; retrying in compat mode")
+                taskSchemaHasNewColumns = false
+                upsert("/rest/v1/tasks", taskToJson(task, includeNewColumns = false))
+            } else {
+                throw e
+            }
+        }
     }
 
     fun updateTaskStatus(taskId: String, status: String) {
@@ -162,15 +219,36 @@ class SupabaseClient(private val context: Context) {
     // ── Contact invites ────────────────────────────────────────────────────
 
     fun sendContactInvite(contact: TrustedContact) {
+        sendContactInvite(
+            contact = contact,
+            requesterEmailSnapshot = null,
+            requesterDisplayNameSnapshot = null
+        )
+    }
+
+    fun sendContactInvite(
+        contact: TrustedContact,
+        requesterEmailSnapshot: String?,
+        requesterDisplayNameSnapshot: String?
+    ) {
+        // PENDING_SENT is local-only; always send "PENDING" so the recipient's SyncWorker can find it
+        val serverStatus = if (contact.status == ContactStatus.PENDING_SENT) "PENDING" else contact.status.name
         upsert("/rest/v1/contact_invites", JSONObject().apply {
             put("id", contact.id)
             put("from_user_id", contact.userId)
             put("to_user_id", contact.contactUserId)
             put("to_email", contact.contactEmail)
-            put("status", contact.status.name)
+            if (!requesterEmailSnapshot.isNullOrBlank()) put("requester_email_snapshot", requesterEmailSnapshot)
+            if (!requesterDisplayNameSnapshot.isNullOrBlank()) put("requester_display_name_snapshot", requesterDisplayNameSnapshot)
+            put("status", serverStatus)
             put("created_at", contact.createdAt)
             put("updated_at", contact.updatedAt)
         })
+    }
+
+    fun fetchAcceptedOutgoingInvites(uid: String): List<Map<String, Any?>> {
+        val rows = get("/rest/v1/contact_invites?from_user_id=eq.$uid&to_user_id=neq.$uid&status=eq.ACCEPTED&select=*")
+        return (0 until rows.length()).map { jsonObjectToMap(rows.getJSONObject(it)) }
     }
 
     fun updateContactStatus(id: String, status: String) {
@@ -194,14 +272,86 @@ class SupabaseClient(private val context: Context) {
                 put("normalized_text", item.normalizedText)
                 put("order_index", item.orderIndex)
                 put("checked", item.checked)
+                if (item.checkedByUserId != null) put("checked_by_user_id", item.checkedByUserId)
+                else put("checked_by_user_id", JSONObject.NULL)
+                if (item.checkedAt != null) put("checked_at", item.checkedAt)
+                else put("checked_at", JSONObject.NULL)
+                if (item.updatedByUserId != null) put("updated_by_user_id", item.updatedByUserId)
+                else put("updated_by_user_id", JSONObject.NULL)
+                if (item.addedByUserId != null) put("added_by_user_id", item.addedByUserId)
+                else put("added_by_user_id", JSONObject.NULL)
+                if (item.addedByDisplayName != null) put("added_by_display_name", item.addedByDisplayName)
+                else put("added_by_display_name", JSONObject.NULL)
+                if (item.addedAt != null) put("added_at", item.addedAt)
+                else put("added_at", JSONObject.NULL)
+                if (item.originColorKey != null) put("origin_color_key", item.originColorKey)
+                else put("origin_color_key", JSONObject.NULL)
                 put("created_at", item.createdAt)
                 put("updated_at", item.updatedAt)
             })
         }
     }
 
+    fun softDeleteShoppingItem(itemId: String, deletedByUserId: String, deletedAt: Long) {
+        patch("/rest/v1/shopping_list_items?id=eq.$itemId", org.json.JSONObject().apply {
+            put("deleted_at", deletedAt)
+            put("deleted_by_user_id", deletedByUserId)
+            put("updated_at", deletedAt)
+        })
+    }
+
     fun fetchShoppingItemsForTask(taskId: String): List<Map<String, Any?>> {
         val rows = get("/rest/v1/shopping_list_items?task_id=eq.$taskId&select=*&order=order_index.asc")
+        return (0 until rows.length()).map { jsonObjectToMap(rows.getJSONObject(it)) }
+    }
+
+    fun updateShoppingItemChecked(
+        itemId: String, taskId: String, checked: Boolean,
+        checkedByUserId: String?, checkedAt: Long?, updatedByUserId: String?, updatedAt: Long
+    ) {
+        patch("/rest/v1/shopping_list_items?id=eq.$itemId", JSONObject().apply {
+            put("checked", checked)
+            put("updated_at", updatedAt)
+            if (checkedByUserId != null) put("checked_by_user_id", checkedByUserId)
+            else put("checked_by_user_id", JSONObject.NULL)
+            if (checkedAt != null) put("checked_at", checkedAt)
+            else put("checked_at", JSONObject.NULL)
+            if (updatedByUserId != null) put("updated_by_user_id", updatedByUserId)
+            else put("updated_by_user_id", JSONObject.NULL)
+        })
+        DiagLog.d("SHOP_SYNC", "item checked itemId=${itemId.take(8)} by=${checkedByUserId?.take(8)}")
+    }
+
+    // ── Task shares ─────────────────────────────────────────────────────────
+
+    fun createTaskShare(
+        shareId: String, taskId: String,
+        ownerUserId: String, sharedWithUserId: String, now: Long
+    ) {
+        DiagLog.d("SHOP_SHARE", "share start taskId=${taskId.take(8)} sharedWith=${sharedWithUserId.take(8)}")
+        upsert("/rest/v1/task_shares", JSONObject().apply {
+            put("id", shareId)
+            put("task_id", taskId)
+            put("owner_user_id", ownerUserId)
+            put("shared_with_user_id", sharedWithUserId)
+            put("permission", "EDIT")
+            put("status", "ACTIVE")
+            put("created_at", now)
+            put("updated_at", now)
+        })
+        DiagLog.d("SHOP_SHARE", "share created taskId=${taskId.take(8)} sharedWith=${sharedWithUserId.take(8)}")
+    }
+
+    fun fetchTaskSharesForUser(uid: String): List<Map<String, Any?>> {
+        val rows = get("/rest/v1/task_shares?or=(owner_user_id.eq.$uid,shared_with_user_id.eq.$uid)&select=*")
+        return (0 until rows.length()).map { jsonObjectToMap(rows.getJSONObject(it)) }
+    }
+
+    fun fetchTasksByIds(ids: List<String>): List<Map<String, Any?>> {
+        if (ids.isEmpty()) return emptyList()
+        val idList = ids.joinToString(",")
+        DiagLog.d("TASK_SYNC", "fetchTasksByIds count=${ids.size}")
+        val rows = get("/rest/v1/tasks?id=in.($idList)&select=*")
         return (0 until rows.length()).map { jsonObjectToMap(rows.getJSONObject(it)) }
     }
 
@@ -258,6 +408,10 @@ class SupabaseClient(private val context: Context) {
                 put("updated_at", now)
             }
         )
+    }
+
+    fun deleteCurrentUserData(): Result<Unit> = runCatching {
+        callEdgeFunction("delete-user-data", JSONObject())
     }
 
     // ── HTTP helpers ───────────────────────────────────────────────────────
@@ -351,7 +505,7 @@ class SupabaseClient(private val context: Context) {
         return text
     }
 
-    private fun taskToJson(t: Task) = JSONObject().apply {
+    private fun taskToJson(t: Task, includeNewColumns: Boolean = true) = JSONObject().apply {
         put("id", t.id)
         put("title", t.title)
         put("description", t.description)
@@ -370,14 +524,34 @@ class SupabaseClient(private val context: Context) {
         put("active_start_time", t.activeStartTime)
         put("active_end_time", t.activeEndTime)
         put("remind_until_done", t.remindUntilDone)
-        put("priority", t.priority.name)
-        put("place_mode", t.placeMode.name)
-        put("place_type_id", t.placeTypeId)
-        put("place_type_name", t.placeTypeName)
-        put("task_type", t.taskType.name)
+        if (includeNewColumns) {
+            put("priority", t.priority.name)
+            put("place_mode", t.placeMode.name)
+            put("place_type_id", t.placeTypeId)
+            put("place_type_name", t.placeTypeName)
+            put("task_type", t.taskType.name)
+            put("is_everywhere", t.isEverywhere)
+        }
+        put("archived", t.archived)
+        if (t.archivedAt != null) put("archived_at", t.archivedAt)
         put("created_at", t.createdAt)
         put("updated_at", t.updatedAt)
     }
+
+    fun archiveTaskRemote(taskId: String, archived: Boolean, archivedAt: Long) {
+        val body = JSONObject().apply {
+            put("archived", archived)
+            put("archived_at", if (archived) archivedAt else JSONObject.NULL)
+            put("updated_at", System.currentTimeMillis())
+        }
+        patch("/rest/v1/tasks?id=eq.$taskId", body)
+    }
+
+    fun fetchFoodHealthTags(): List<Map<String, Any?>> {
+        val rows = get("/rest/v1/food_health_tags?select=id,normalized_name,language,health_tag,suggestion,subcategory&order=normalized_name")
+        return (0 until rows.length()).map { jsonObjectToMap(rows.getJSONObject(it)) }
+    }
+
 
     private fun jsonObjectToMap(obj: JSONObject): Map<String, Any?> {
         val map = mutableMapOf<String, Any?>()
@@ -393,5 +567,7 @@ class SupabaseClient(private val context: Context) {
             "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
             RegexOption.IGNORE_CASE
         )
+        // null = unknown (first push will probe), true = full schema, false = compat mode (pre-migration)
+        @Volatile var taskSchemaHasNewColumns: Boolean? = null
     }
 }

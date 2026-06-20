@@ -21,7 +21,13 @@ class SnoozeAlarmReceiver : BroadcastReceiver() {
             if (task.status != TaskStatus.ACTIVE) return@launch
 
             NotificationHelper.showPlaceReminderNotification(
-                context, task.id, task.title, task.placeName, task.priority
+                context = context,
+                taskId = task.id,
+                taskTitle = task.title,
+                exactPlaceName = task.placeName,
+                exactPlaceAddress = task.address,
+                savedPlaceName = task.placeName,
+                priority = task.priority
             )
 
             if (isRepeat) {

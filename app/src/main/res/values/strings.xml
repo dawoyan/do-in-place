@@ -26,6 +26,7 @@
     <!-- Actions / buttons -->
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
     <string name="done">Done</string>
     <string name="close">Close</string>
     <string name="create_task">Create task</string>
@@ -89,6 +90,7 @@
     <string name="save_place">Save place</string>
 
     <!-- Home screen -->
+    <string name="tab_home">Home</string>
     <string name="no_reminders_yet">No reminders yet</string>
     <string name="tap_to_create">Tap + to create a place reminder</string>
 
@@ -151,12 +153,71 @@
     <string name="swipe_to_archive">Swipe a task left on the home screen to archive it</string>
 
     <!-- Saved places -->
-    <string name="saved_places">Saved places</string>
+    <string name="saved_places">Places</string>
+    <string name="places">Places</string>
     <string name="remove_place">Remove place?</string>
     <string name="no_saved_places">No saved places yet</string>
+    <string name="delete_place_confirm">Delete "%1$s"?</string>
+    <string name="edit_place">Edit place</string>
+    <string name="edit">Edit</string>
+    <string name="address">Address</string>
 
-    <!-- Sort list -->
+    <!-- Saved cards -->
+    <string name="tab_cards">Cards</string>
+    <string name="cards_empty_title">No cards saved yet</string>
+    <string name="cards_empty_subtitle">Scan or add a card to keep its QR or barcode on this phone.</string>
+    <string name="cards_scan">Scan card</string>
+    <string name="cards_add_photo">Add from photo</string>
+    <string name="cards_add_manual">Add manually</string>
+    <string name="cards_saved_locally">Saved only on this phone.</string>
+    <string name="cards_name">Card name</string>
+    <string name="cards_code_type">Code type</string>
+    <string name="cards_code_value">Code value</string>
+    <string name="cards_note">Note</string>
+    <string name="cards_password_pin">Password / PIN / code</string>
+    <string name="show_password">Show password</string>
+    <string name="hide_password">Hide password</string>
+    <string name="cards_save">Save card</string>
+    <string name="cards_copy">Copy code</string>
+    <string name="cards_copied">Copied</string>
+    <string name="cards_delete_title">Delete card?</string>
+    <string name="cards_delete_message">Delete "%1$s" from this phone?</string>
+    <string name="cards_duplicate_title">Card already exists</string>
+    <string name="cards_duplicate_message">This code is already saved as "%1$s".</string>
+    <string name="cards_open_existing">Open existing</string>
+    <string name="cards_save_duplicate">Save duplicate</string>
+    <string name="cards_camera_permission_title">Camera permission needed</string>
+    <string name="cards_camera_permission_message">Allow camera access to scan QR and barcodes. You can also add a code manually.</string>
+    <string name="cards_render_fallback_qr">This barcode format cannot be displayed. Showing it as QR instead.</string>
+    <string name="cards_detected_code">Detected code</string>
+    <string name="cards_type">Type</string>
+    <string name="cards_type_qr">QR</string>
+    <string name="cards_type_barcode">Barcode</string>
+    <string name="cards_name_required">Enter a card name.</string>
+    <string name="cards_code_value_required">Enter a code value.</string>
+    <string name="cards_manual_barcode_hint">Manual barcodes are saved as CODE-128 unless they come from a scan.</string>
+    <string name="cards_edit">Edit</string>
+    <string name="cards_edit_warning">You can edit the card name and note here. The saved code stays unchanged.</string>
+    <string name="cards_render_failed">This code could not be displayed.</string>
+    <string name="cards_scan_again">Scan again</string>
+    <string name="cards_try_again">Try again</string>
+    <string name="cards_scan_cancelled">No code was scanned.</string>
+    <string name="cards_scan_prompt">Scan QR or barcode</string>
+    <string name="cards_no_matches">No saved cards match your search.</string>
+    <string name="cards_photo_decode_failed">No QR or barcode was found in that image.</string>
+
+    <!-- Sort / Edit list -->
     <string name="sort_shopping_list">Sort Shopping List</string>
+    <string name="shopping_edit_title">Edit shopping list</string>
+    <string name="shopping_edit_hint">Drag handle to reorder · trash icon deletes with confirmation</string>
+    <string name="shopping_delete_item_title">Delete item?</string>
+    <string name="shopping_delete_item_message">Delete \"%1$s\" from this shopping list?</string>
+    <string name="shopping_view_only_no_edit">You can view this list, but cannot edit it.</string>
+    <string name="action_auto_sort">Auto-sort</string>
+    <string name="action_edit">Edit</string>
+    <string name="save_order">Save order</string>
+    <string name="save_as_default_for_place">Save as default for this place</string>
+    <string name="saved_default_for">Saved as default for %1$s</string>
 
     <!-- Dialogs -->
     <string name="cancel_task_title">Cancel unfinished task?</string>
@@ -191,6 +252,55 @@
     <string name="open_in_browser">Open in browser</string>
     <string name="location_not_available">Location is not available yet.</string>
     <string name="could_not_open_map">Could not open map app.</string>
+
+    <!-- Everywhere / time-based tasks -->
+    <string name="everywhere">Everywhere</string>
+    <string name="everywhere_subtitle">Reminder by date only — no location needed</string>
+    <string name="time_based_tasks">Time-based tasks</string>
+    <string name="recurring_tasks">Recurring tasks</string>
+    <string name="add_recurring_task">Add recurring task</string>
+    <string name="add_recurring_task_title">Add recurring task</string>
+    <string name="edit_recurring_task_title">Edit recurring task</string>
+    <string name="edit_recurring_task">Edit recurring task</string>
+    <string name="recurring_task_note">Date-based only. No place, geofence, or location is used.</string>
+    <string name="recurrence_type">Recurrence type</string>
+    <string name="day_of_month">Day of month</string>
+    <string name="month">Month</string>
+    <string name="day">Day</string>
+    <string name="next_reminder">Next reminder</string>
+    <string name="recurring_empty">No recurring tasks yet</string>
+    <string name="due_date_required">Due date *</string>
+    <string name="everywhere_due_date_required">Due date is required for Everywhere reminders.</string>
+    <string name="everywhere_shopping_needs_type">Shopping tasks need at least a place type.</string>
+    <string name="recurrence_none">Once (no repeat)</string>
+    <string name="recurrence_monthly">Monthly</string>
+    <string name="recurrence_yearly">Yearly</string>
+    <string name="repeats_label">Repeats:</string>
+    <string name="repeats_monthly_on" formatted="false">Repeats every month on the %d%s</string>
+    <string name="repeats_yearly_on" formatted="false">Repeats every year on %s %d</string>
+    <string name="exact_label">Exact</string>
+    <string name="type_label">Type</string>
+    <string name="overdue">Overdue</string>
+    <string name="due_soon">Due soon</string>
+    <string name="due_today">Due today</string>
+    <string name="calendar_add_dialog_title">Add to Google Calendar?</string>
+    <string name="calendar_add_dialog_text">Add \"%s\" as a completed event?</string>
+    <string name="calendar_yes_add">Yes, add</string>
+    <string name="calendar_done_failed">Task is done, but Google Calendar was not updated.</string>
+    <string name="discard_changes_title">Discard changes?</string>
+    <string name="discard_changes_message">Your changes have not been saved.</string>
+    <string name="discard">Discard</string>
+
+    <!-- Contacts / connection actions -->
+    <string name="action_cancel_request">Cancel request</string>
+    <string name="action_resend_request">Resend</string>
+    <string name="waiting_for_acceptance">Waiting for acceptance…</string>
+    <string name="connection_accepted_title">Connection accepted</string>
+    <string name="connection_accepted_body">%s accepted your connection request</string>
+    <string name="task_shared_notification_title">Task shared with you</string>
+    <string name="task_shared_notification_body">%s shared &#8220;%s&#8221; with you</string>
+    <string name="healthier_item_icon">Healthier item</string>
+    <string name="less_healthy_item_icon">Less healthy item</string>
 
     <!-- Share location from Maps -->
     <string name="share_place_title">Save shared place?</string>

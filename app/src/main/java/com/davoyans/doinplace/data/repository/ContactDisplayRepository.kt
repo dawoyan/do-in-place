@@ -19,15 +19,21 @@ class ContactDisplayRepository(private val db: AppDatabase) {
     companion object {
         fun makeId(ownerUserId: String, contactUserId: String) = "$ownerUserId:$contactUserId"
 
+        fun resolveDisplay(
+            contactUserId: String,
+            contact: TrustedContact?,
+            pref: ContactDisplayPref?
+        ): DisplayNameResult = ContactDisplayNameResolver.resolveForUi(
+            viewerUserId = pref?.ownerUserId ?: contact?.userId ?: "",
+            otherUserId = contactUserId,
+            contact = contact,
+            pref = pref
+        )
+
         fun resolveDisplayName(
             contactUserId: String,
             contact: TrustedContact?,
             pref: ContactDisplayPref?
-        ): String = when {
-            !pref?.nickname.isNullOrBlank() -> pref!!.nickname
-            !contact?.contactDisplayName.isNullOrBlank() -> contact!!.contactDisplayName
-            !contact?.contactEmail.isNullOrBlank() -> contact!!.contactEmail
-            else -> contactUserId.take(6) + "…"
-        }
+        ): String = resolveDisplay(contactUserId, contact, pref).primary
     }
 }

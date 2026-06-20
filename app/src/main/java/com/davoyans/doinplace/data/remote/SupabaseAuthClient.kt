@@ -21,9 +21,6 @@ class SupabaseAuthClient(private val context: Context) {
         val expiresAt: Long = 0L   // Unix ms; 0 = unknown
     )
 
-    class EmailConfirmationPendingException(email: String) :
-        Exception("Check your inbox at $email and click the confirmation link, then sign in.")
-
     class SessionExpiredException :
         Exception("Session expired. Please log in again.")
 
@@ -33,32 +30,6 @@ class SupabaseAuthClient(private val context: Context) {
 
     private val baseUrl get() = BuildConfig.SUPABASE_URL.trimEnd('/')
     private val anonKey get() = BuildConfig.SUPABASE_ANON_KEY
-
-    // ── Email / password ───────────────────────────────────────────────────
-
-    fun signUp(email: String, password: String, displayName: String): Result<Session> =
-        runCatching {
-            val body = JSONObject().apply {
-                put("email", email.trim())
-                put("password", password)
-                put("data", JSONObject().put("display_name", displayName.trim()))
-            }
-            val json = post("$baseUrl/auth/v1/signup", body)
-            if (!json.has("access_token") || json.isNull("access_token")) {
-                throw EmailConfirmationPendingException(email.trim())
-            }
-            parseSession(json, displayName)
-        }
-
-    fun signIn(email: String, password: String): Result<Session> =
-        runCatching {
-            val body = JSONObject().apply {
-                put("email", email.trim())
-                put("password", password)
-            }
-            val json = post("$baseUrl/auth/v1/token?grant_type=password", body)
-            parseSession(json)
-        }
 
     fun signInWithGoogle(idToken: String): Result<Session> =
         runCatching {
@@ -112,7 +83,6 @@ class SupabaseAuthClient(private val context: Context) {
         if (!isExpiringSoon()) {
             return getAccessToken() ?: throw SessionExpiredException()
         }
-        DiagLog.d("AUTH", "token expiring soon — proactive refresh")
         return refreshAndGetToken()
     }
 
@@ -134,10 +104,11 @@ class SupabaseAuthClient(private val context: Context) {
             if (failedToken != null) {
                 val current = getAccessToken()
                 if (current != null && current != failedToken) {
-                    DiagLog.d("AUTH", "refresh skipped; token already fresh")
+                    DiagLog.d("AUTH", "refresh already in progress — joining")
                     return current
                 }
             } else if (!force && !isExpiringSoon()) {
+                DiagLog.d("AUTH", "refresh already in progress — joining")
                 return getAccessToken() ?: throw SessionExpiredException()
             }
 
@@ -149,6 +120,7 @@ class SupabaseAuthClient(private val context: Context) {
                 throw SessionExpiredException()
             }
 
+            DiagLog.d("AUTH", "token expiring soon — proactive refresh")
             DiagLog.d("AUTH", "refresh start")
             Log.d(TAG, "Refreshing Supabase session")
             val body = JSONObject().put("refresh_token", refreshToken)

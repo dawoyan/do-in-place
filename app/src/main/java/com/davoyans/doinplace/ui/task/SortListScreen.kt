@@ -7,6 +7,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -16,12 +17,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.zIndex
 import com.davoyans.doinplace.R
 import com.davoyans.doinplace.data.model.ShoppingListItem
+import com.davoyans.doinplace.util.DiagLog
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,6 +33,9 @@ fun SortListScreen(
     items: List<ShoppingListItem>,
     taskPlaceName: String,
     hasLearnedOrder: Boolean,
+    currentUserId: String,
+    onAddItem: (text: String) -> Unit = {},
+    onDeleteItem: (id: String) -> Unit = {},
     onSaveOrder: (List<ShoppingListItem>) -> Unit,
     onSaveAsDefault: (List<ShoppingListItem>) -> Unit,
     onBack: () -> Unit
@@ -42,6 +48,9 @@ fun SortListScreen(
     val itemHeightPx = with(density) { itemHeightDp.toPx() }
     var snackMsg by remember { mutableStateOf<String?>(null) }
     val snackState = remember { SnackbarHostState() }
+    val savedDefaultMsg = stringResource(R.string.saved_default_for, taskPlaceName)
+    var newItemText by remember { mutableStateOf("") }
+    var pendingDeleteItem by remember { mutableStateOf<ShoppingListItem?>(null) }
 
     LaunchedEffect(snackMsg) {
         snackMsg?.let { snackState.showSnackbar(it); snackMsg = null }
@@ -53,25 +62,83 @@ fun SortListScreen(
         return m.mapIndexed { i, it -> it.copy(orderIndex = i) }
     }
 
+    // Delete confirmation dialog
+    pendingDeleteItem?.let { item ->
+        AlertDialog(
+            onDismissRequest = { pendingDeleteItem = null },
+            title = { Text(stringResource(R.string.shopping_delete_item_title)) },
+            text = { Text(stringResource(R.string.shopping_delete_item_message, item.text)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    DiagLog.d("SHOP_EDIT", "delete confirm itemId=${item.id.take(8)}")
+                    onDeleteItem(item.id)
+                    sortedItems = sortedItems.filter { it.id != item.id }
+                        .mapIndexed { i, it -> it.copy(orderIndex = i) }
+                    pendingDeleteItem = null
+                }) {
+                    Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingDeleteItem = null }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.sort_shopping_list)) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, stringResource(R.string.back)) } }
+                title = { Text(stringResource(R.string.shopping_edit_title)) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.Default.ArrowBack, stringResource(R.string.back))
+                    }
+                }
             )
         },
         snackbarHost = { SnackbarHost(snackState) }
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
 
+            // Add item row
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedTextField(
+                    value = newItemText,
+                    onValueChange = { newItemText = it },
+                    modifier = Modifier.weight(1f),
+                    placeholder = { Text("Add item…") },
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.bodyMedium
+                )
+                Button(
+                    onClick = {
+                        val t = newItemText.trim()
+                        if (t.isNotBlank()) {
+                            DiagLog.d("SHOP_EDIT", "add item '${t.take(20)}'")
+                            onAddItem(t)
+                            newItemText = ""
+                        }
+                    },
+                    enabled = newItemText.isNotBlank()
+                ) { Text("+") }
+            }
+
             Text(
-                "Drag the handle or use arrows to reorder items",
+                stringResource(R.string.shopping_edit_hint),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp)
             )
 
-            // Scrollable item list
+            // Reorderable item list
             Column(
                 Modifier
                     .weight(1f)
@@ -119,7 +186,11 @@ fun SortListScreen(
                                 .size(32.dp)
                                 .pointerInput(index) {
                                     detectDragGestures(
-                                        onDragStart = { draggingIndex = index; dragOffset = 0f },
+                                        onDragStart = {
+                                            draggingIndex = index
+                                            dragOffset = 0f
+                                            DiagLog.d("SHOP_EDIT", "drag reorder taskId=? itemId=${item.id.take(8)}")
+                                        },
                                         onDrag = { _, delta -> dragOffset += delta.y },
                                         onDragEnd = {
                                             val d = draggingIndex
@@ -135,13 +206,13 @@ fun SortListScreen(
                                 },
                             tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                         )
-                        Spacer(Modifier.width(12.dp))
+                        Spacer(Modifier.width(8.dp))
                         Text(
                             item.text,
                             style = MaterialTheme.typography.bodyLarge,
                             modifier = Modifier.weight(1f)
                         )
-                        // Up / Down fallback buttons
+                        // Arrow buttons (accessibility fallback)
                         IconButton(
                             onClick = { if (index > 0) sortedItems = reorder(index, index - 1) },
                             enabled = index > 0,
@@ -159,6 +230,18 @@ fun SortListScreen(
                         ) {
                             Icon(Icons.Default.KeyboardArrowDown, "Move down", Modifier.size(20.dp))
                         }
+                        IconButton(
+                            onClick = { pendingDeleteItem = item },
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = stringResource(R.string.delete),
+                                modifier = Modifier.size(18.dp),
+                                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
+                            )
+                        }
+
                     }
                     HorizontalDivider(thickness = 0.5.dp)
                 }
@@ -166,37 +249,26 @@ fun SortListScreen(
 
             // Action buttons
             Column(
-                Modifier
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Button(
                     onClick = { onSaveOrder(sortedItems) },
                     modifier = Modifier.fillMaxWidth()
-                ) { Text("Save Order") }
+                ) { Text(stringResource(R.string.save_order)) }
 
                 OutlinedButton(
                     onClick = {
                         onSaveAsDefault(sortedItems)
-                        snackMsg = "Saved as default order for $taskPlaceName"
+                        snackMsg = savedDefaultMsg
                     },
                     modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Save as Default for This Place")
-                }
-
-                if (!hasLearnedOrder) {
-                    Text(
-                        "No saved order for $taskPlaceName yet — sort and tap above to learn.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                    )
-                }
+                ) { Text(stringResource(R.string.save_as_default_for_place)) }
 
                 TextButton(
                     onClick = onBack,
                     modifier = Modifier.fillMaxWidth()
-                ) { Text("Cancel") }
+                ) { Text(stringResource(R.string.cancel)) }
             }
         }
     }
