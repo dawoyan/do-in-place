@@ -102,8 +102,17 @@ interface ShoppingListItemDao {
     suspend fun softDelete(id: String, userId: String, now: Long = System.currentTimeMillis())
 
     @Query("""UPDATE shopping_list_items SET text = :text, normalizedText = :normalizedText,
+        rawText = :rawText, canonicalName = :canonicalName,
         updatedByUserId = :updatedByUserId, updatedAt = :now, syncStatus = 'PENDING_UPDATE' WHERE id = :id""")
-    suspend fun updateText(id: String, text: String, normalizedText: String, updatedByUserId: String?, now: Long = System.currentTimeMillis())
+    suspend fun updateText(
+        id: String,
+        text: String,
+        normalizedText: String,
+        rawText: String?,
+        canonicalName: String,
+        updatedByUserId: String?,
+        now: Long = System.currentTimeMillis()
+    )
 
     @Query("""
         SELECT * FROM shopping_list_items WHERE deletedAt IS NULL AND taskId IN

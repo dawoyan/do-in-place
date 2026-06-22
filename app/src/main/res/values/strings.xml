@@ -213,6 +213,11 @@
     <string name="shopping_delete_item_title">Delete item?</string>
     <string name="shopping_delete_item_message">Delete \"%1$s\" from this shopping list?</string>
     <string name="shopping_view_only_no_edit">You can view this list, but cannot edit it.</string>
+    <string name="shopping_item_confirm_title">Use this as item name?</string>
+    <string name="shopping_item_confirm_raw">raw: \"%1$s\"</string>
+    <string name="shopping_item_confirm_suggested">suggested: \"%1$s\"</string>
+    <string name="shopping_item_confirm_use">Use suggested</string>
+    <string name="shopping_item_confirm_edit">Edit manually</string>
     <string name="action_auto_sort">Auto-sort</string>
     <string name="action_edit">Edit</string>
     <string name="save_order">Save order</string>

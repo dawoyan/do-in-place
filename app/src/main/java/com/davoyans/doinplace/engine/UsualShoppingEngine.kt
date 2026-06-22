@@ -40,11 +40,12 @@ class UsualShoppingEngine(private val db: AppDatabase) {
             )
         )
         for (item in items.filter { it.checked }) {
-            val norm = item.text.lowercase().trim()
+            val displayItem = item.canonicalOrText
+            val norm = ShoppingItemCanonicalizer.normalize(displayItem)
             val existing = db.usualShoppingDao().getItemStat(userId, placeTypeKey, norm)
             val updated = existing?.copy(
                 buyCount = existing.buyCount + 1,
-                displayItem = item.text,
+                displayItem = displayItem,
                 lastBoughtAt = now,
                 suppressedUntil = 0
             ) ?: UsualShoppingItemStats(
@@ -52,7 +53,7 @@ class UsualShoppingEngine(private val db: AppDatabase) {
                 userId = userId,
                 placeTypeKey = placeTypeKey,
                 normalizedItem = norm,
-                displayItem = item.text,
+                displayItem = displayItem,
                 buyCount = 1,
                 lastBoughtAt = now
             )

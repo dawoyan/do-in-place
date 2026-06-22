@@ -174,6 +174,8 @@ data class ShoppingListItem(
     val taskId: String,
     val text: String,
     val normalizedText: String,
+    val rawText: String? = null,
+    val canonicalName: String = "",
     val orderIndex: Int,
     val checked: Boolean = false,
     val checkedByUserId: String? = null,
@@ -189,7 +191,10 @@ data class ShoppingListItem(
     val originColorKey: String? = null,
     val deletedAt: Long? = null,
     val deletedByUserId: String? = null
-)
+) {
+    val canonicalOrText: String get() = canonicalName.ifBlank { text }
+    val rawOrText: String get() = rawText?.takeIf { it.isNotBlank() } ?: text
+}
 
 @Entity(tableName = "task_shares", indices = [androidx.room.Index(value = ["taskId", "sharedWithUserId"], unique = true)])
 data class TaskShare(

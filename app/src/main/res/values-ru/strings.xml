@@ -213,6 +213,11 @@
     <string name="shopping_delete_item_title">Удалить товар?</string>
     <string name="shopping_delete_item_message">Удалить «%1$s» из этого списка покупок?</string>
     <string name="shopping_view_only_no_edit">Вы можете просматривать этот список, но не редактировать.</string>
+    <string name="shopping_item_confirm_title">Использовать это как название товара?</string>
+    <string name="shopping_item_confirm_raw">raw: \"%1$s\"</string>
+    <string name="shopping_item_confirm_suggested">suggested: \"%1$s\"</string>
+    <string name="shopping_item_confirm_use">Использовать</string>
+    <string name="shopping_item_confirm_edit">Исправить вручную</string>
     <string name="action_auto_sort">Автосорт.</string>
     <string name="action_edit">Редакт.</string>
     <string name="save_order">Сохранить порядок</string>

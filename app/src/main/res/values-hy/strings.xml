@@ -213,6 +213,11 @@
     <string name="shopping_delete_item_title">Ջնջե՞լ ապրանքը</string>
     <string name="shopping_delete_item_message">Ջնջե՞լ «%1$s»-ը այս գնումների ցուցակից</string>
     <string name="shopping_view_only_no_edit">Դուք կարող եք դիտել, բայց չեք կարող խմբ.</string>
+    <string name="shopping_item_confirm_title">Օգտագործե՞լ սա որպես ապրանքի անուն</string>
+    <string name="shopping_item_confirm_raw">raw: \"%1$s\"</string>
+    <string name="shopping_item_confirm_suggested">suggested: \"%1$s\"</string>
+    <string name="shopping_item_confirm_use">Օգտագործել</string>
+    <string name="shopping_item_confirm_edit">Խմբագրել ձեռքով</string>
     <string name="action_auto_sort">Ավտո դասավ.</string>
     <string name="action_edit">Խմբ.</string>
     <string name="save_order">Պահել կարգը</string>

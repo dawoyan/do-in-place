@@ -25,8 +25,8 @@ android {
         applicationId = "com.davoyans.doinplace"
         minSdk = 26
         targetSdk = 36
-        versionCode = 29
-        versionName = "2.4.6"
+        versionCode = 30
+        versionName = "2.4.7"
 
         buildConfigField("String", "SUPABASE_URL",          "\"${localProp("supabase.url")}\"")
         buildConfigField("String", "SUPABASE_ANON_KEY",     "\"${localProp("supabase.anonKey")}\"")

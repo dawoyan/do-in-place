@@ -6,7 +6,7 @@ Keep this section updated before building release artifacts so the same version 
 
 | Status | versionCode | versionName | Notes |
 | --- | ---: | --- | --- |
-| Current working release | 29 | 2.4.6 | Places/cards/shopping/reminder follow-up + QR brightness/keep-awake |
+| Current working release | 30 | 2.4.7 | Canonical shopping item extraction + receipt suggestion cleanup |
 | Previously used | 28 | 2.4.5 | Already existed before this release bump |
 
 ## Release Rule

@@ -4,6 +4,7 @@ import com.davoyans.doinplace.data.db.ShoppingPlaceItemOrderDao
 import com.davoyans.doinplace.data.model.ShoppingListItem
 import com.davoyans.doinplace.data.model.ShoppingPlaceItemOrder
 import com.davoyans.doinplace.data.model.Task
+import com.davoyans.doinplace.engine.ShoppingItemCanonicalizer
 import com.davoyans.doinplace.util.DiagLog
 import java.util.UUID
 
@@ -11,10 +12,7 @@ class ShoppingOrderEngine(private val dao: ShoppingPlaceItemOrderDao) {
     private val autoSortUseCase = ShoppingAutoSortUseCase(::normalize)
 
     fun normalize(text: String): String =
-        text.lowercase().trim()
-            .replace(Regex("[^\\p{L}\\p{N}\\s]"), "")
-            .replace(Regex("\\s+"), " ")
-            .trim()
+        ShoppingItemCanonicalizer.normalize(text)
 
     fun buildPlaceKey(task: Task): String {
         if (!task.placeId.isNullOrBlank()) return task.placeId
@@ -47,18 +45,19 @@ class ShoppingOrderEngine(private val dao: ShoppingPlaceItemOrderDao) {
         task.placeTypeId?.takeIf { it.isNotBlank() }?.let { typeId ->
             saveProfile(uid, "type:$typeId", items, now)
         }
-        DiagLog.d("SHOP_AUTO_SORT", "source=save finalOrder=${items.joinToString(" | ") { it.text }}")
+        DiagLog.d("SHOP_AUTO_SORT", "source=save finalOrder=${items.joinToString(" | ") { it.canonicalOrText }}")
     }
 
     private suspend fun saveProfile(uid: String, placeKey: String, items: List<ShoppingListItem>, now: Long) {
         val existing = dao.getForPlace(uid, placeKey).associateBy { it.normalizedItemText }
         items.forEachIndexed { index, item ->
-            val normalized = normalize(item.text)
+            val displayText = item.canonicalOrText
+            val normalized = normalize(displayText)
             val rank = index * 10
             val previous = existing[normalized]
             dao.upsert(
                 previous?.copy(
-                    displayText = item.text,
+                    displayText = displayText,
                     orderRank = rank,
                     useCount = previous.useCount + 1,
                     lastUsedAt = now
@@ -67,7 +66,7 @@ class ShoppingOrderEngine(private val dao: ShoppingPlaceItemOrderDao) {
                     userId = uid,
                     placeKey = placeKey,
                     normalizedItemText = normalized,
-                    displayText = item.text,
+                    displayText = displayText,
                     orderRank = rank,
                     useCount = 1,
                     lastUsedAt = now

@@ -9,6 +9,7 @@ import com.davoyans.doinplace.data.model.TaskEventType
 import com.davoyans.doinplace.data.model.TaskPriority
 import com.davoyans.doinplace.data.model.TaskStatus
 import com.davoyans.doinplace.data.model.TaskType
+import com.davoyans.doinplace.engine.ShoppingItemCanonicalizer
 import com.davoyans.doinplace.data.repository.ContactDisplayNameResolver
 import com.davoyans.doinplace.data.repository.ContactDisplayRepository
 import java.util.UUID
@@ -178,11 +179,18 @@ class SyncWorker(appContext: Context, params: WorkerParameters) :
                             if (remoteItems.isNotEmpty()) {
                                 val items = remoteItems.mapIndexedNotNull { i, raw ->
                                     val itemId = raw["id"] as? String ?: return@mapIndexedNotNull null
+                                    val remoteCanonical = raw["canonical_name"] as? String
+                                    val remoteText = raw["text"] as? String ?: ""
+                                    val canonicalText = remoteCanonical?.takeIf { it.isNotBlank() } ?: remoteText
                                     ShoppingListItem(
                                         id = itemId,
                                         taskId = taskId,
-                                        text = raw["text"] as? String ?: "",
-                                        normalizedText = raw["normalized_text"] as? String ?: "",
+                                        text = canonicalText,
+                                        normalizedText = (raw["normalized_text"] as? String)
+                                            ?.takeIf { it.isNotBlank() }
+                                            ?: ShoppingItemCanonicalizer.normalize(canonicalText),
+                                        rawText = raw["raw_text"] as? String ?: remoteText,
+                                        canonicalName = canonicalText,
                                         orderIndex = (raw["order_index"] as? Long)?.toInt() ?: i,
                                         checked = raw["checked"] as? Boolean ?: false,
                                         checkedByUserId = raw["checked_by_user_id"] as? String,
@@ -301,11 +309,18 @@ class SyncWorker(appContext: Context, params: WorkerParameters) :
                                     DiagLog.d("SHOP_SYNC", "conflict winner=local itemId=${iId.take(8)}")
                                     return@mapIndexedNotNull null // keep local pending
                                 }
+                                val remoteCanonical = rI["canonical_name"] as? String
+                                val remoteText = rI["text"] as? String ?: ""
+                                val canonicalText = remoteCanonical?.takeIf { it.isNotBlank() } ?: remoteText
                                 ShoppingListItem(
                                     id = iId,
                                     taskId = merged.id,
-                                    text = rI["text"] as? String ?: "",
-                                    normalizedText = rI["normalized_text"] as? String ?: "",
+                                    text = canonicalText,
+                                    normalizedText = (rI["normalized_text"] as? String)
+                                        ?.takeIf { it.isNotBlank() }
+                                        ?: ShoppingItemCanonicalizer.normalize(canonicalText),
+                                    rawText = rI["raw_text"] as? String ?: remoteText,
+                                    canonicalName = canonicalText,
                                     orderIndex = (rI["order_index"] as? Long)?.toInt() ?: i,
                                     checked = rI["checked"] as? Boolean ?: false,
                                     checkedByUserId = rI["checked_by_user_id"] as? String,
@@ -425,11 +440,18 @@ class SyncWorker(appContext: Context, params: WorkerParameters) :
                         val localItem = existingLocal.find { it.id == iId }
                         val remoteUpd = (rI["updated_at"] as? Long) ?: 0L
                         if (localItem != null && localItem.updatedAt >= remoteUpd) return@mapIndexedNotNull null
+                        val remoteCanonical = rI["canonical_name"] as? String
+                        val remoteText = rI["text"] as? String ?: ""
+                        val canonicalText = remoteCanonical?.takeIf { it.isNotBlank() } ?: remoteText
                         ShoppingListItem(
                             id = iId,
                             taskId = task.id,
-                            text = rI["text"] as? String ?: "",
-                            normalizedText = rI["normalized_text"] as? String ?: "",
+                            text = canonicalText,
+                            normalizedText = (rI["normalized_text"] as? String)
+                                ?.takeIf { it.isNotBlank() }
+                                ?: ShoppingItemCanonicalizer.normalize(canonicalText),
+                            rawText = rI["raw_text"] as? String ?: remoteText,
+                            canonicalName = canonicalText,
                             orderIndex = (rI["order_index"] as? Long)?.toInt() ?: i,
                             checked = rI["checked"] as? Boolean ?: false,
                             checkedByUserId = rI["checked_by_user_id"] as? String,

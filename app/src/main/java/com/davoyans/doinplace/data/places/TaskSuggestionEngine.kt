@@ -3,6 +3,7 @@ package com.davoyans.doinplace.data.places
 import android.util.Log
 import com.davoyans.doinplace.data.db.UserTaskSuggestionDao
 import com.davoyans.doinplace.data.model.UserTaskSuggestion
+import com.davoyans.doinplace.engine.ShoppingItemCanonicalizer
 import java.util.UUID
 
 class TaskSuggestionEngine(private val dao: UserTaskSuggestionDao) {
@@ -164,10 +165,12 @@ class TaskSuggestionEngine(private val dao: UserTaskSuggestionDao) {
         placeTypeId: String?,
         text: String
     ) {
-        val norm = normalize(text)
+        val canonicalized = ShoppingItemCanonicalizer.canonicalize(text, emitLog = false)
+        val displayText = canonicalized.canonicalName.ifBlank { text.trim() }
+        val norm = normalize(displayText)
         if (norm.isBlank()) return
         val now = System.currentTimeMillis()
-        Log.d("ShoppingSuggest", "shopping suggestion learned item=$text norm=$norm")
+        Log.d("ShoppingSuggest", "shopping suggestion learned item=$displayText norm=$norm")
 
         // Store per exact place
         if (placeKey.isNotBlank()) {
@@ -178,7 +181,7 @@ class TaskSuggestionEngine(private val dao: UserTaskSuggestionDao) {
             } else {
                 dao.upsert(UserTaskSuggestion(
                     id = UUID.randomUUID().toString(), userId = uid, placeKey = placeKey,
-                    placeTypeId = placeTypeId, normalizedText = norm, displayText = text,
+                    placeTypeId = placeTypeId, normalizedText = norm, displayText = displayText,
                     useCount = 1, acceptedCount = 1, lastUsedAt = now,
                     category = UserTaskSuggestion.CAT_SHOPPING
                 ))
@@ -193,7 +196,7 @@ class TaskSuggestionEngine(private val dao: UserTaskSuggestionDao) {
             } else {
                 dao.upsert(UserTaskSuggestion(
                     id = UUID.randomUUID().toString(), userId = uid, placeKey = "",
-                    placeTypeId = placeTypeId, normalizedText = norm, displayText = text,
+                    placeTypeId = placeTypeId, normalizedText = norm, displayText = displayText,
                     useCount = 1, acceptedCount = 0, lastUsedAt = now,
                     category = UserTaskSuggestion.CAT_SHOPPING
                 ))

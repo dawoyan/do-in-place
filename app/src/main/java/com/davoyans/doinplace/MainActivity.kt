@@ -31,6 +31,7 @@ import com.davoyans.doinplace.data.model.*
 import com.davoyans.doinplace.data.places.TaskSuggestionEngine
 import com.davoyans.doinplace.data.shopping.ShoppingOrderEngine
 import com.davoyans.doinplace.engine.FoodHealthEngine
+import com.davoyans.doinplace.engine.ShoppingItemCanonicalizer
 import com.davoyans.doinplace.engine.UsualShoppingEngine
 import com.davoyans.doinplace.notification.WalkReminderWorker
 import com.davoyans.doinplace.ui.task.UsualShoppingSuggestionDialog
@@ -327,6 +328,7 @@ class MainActivity : ComponentActivity() {
         var draftTitle by remember { mutableStateOf("") }
         var draftDescription by remember { mutableStateOf("") }
         var draftShoppingItems by remember { mutableStateOf("") }
+        var draftShoppingItemsNeedConfirmation by remember { mutableStateOf(false) }
         var draftTaskType by remember { mutableStateOf(TaskType.SIMPLE) }
         var draftPriority by remember { mutableStateOf(TaskPriority.NO_RUSH) }
         var draftAssigneeId by remember { mutableStateOf("") }
@@ -398,6 +400,7 @@ class MainActivity : ComponentActivity() {
             draftTitle = ""
             draftDescription = ""
             draftShoppingItems = ""
+            draftShoppingItemsNeedConfirmation = false
             draftTaskType = TaskType.SIMPLE
             draftPriority = TaskPriority.NO_RUSH
             draftAssigneeId = ""
@@ -515,7 +518,17 @@ class MainActivity : ComponentActivity() {
                                 Toast.makeText(this@MainActivity, "Only English/Latin text can be recognized for now.", Toast.LENGTH_LONG).show()
                             else -> {
                                 DiagLog.d("PREFILL", "openNewReminder sourceType=SCREENSHOT_OCR")
-                                draftDescription = text
+                                if (ShoppingItemCanonicalizer.looksLikeShoppingImport(text)) {
+                                    draftTitle = "Shopping list"
+                                    draftDescription = ""
+                                    draftShoppingItems = text
+                                    draftShoppingItemsNeedConfirmation = true
+                                } else {
+                                    draftTitle = ""
+                                    draftDescription = text
+                                    draftShoppingItems = ""
+                                    draftShoppingItemsNeedConfirmation = false
+                                }
                                 DiagLog.d("BACK_NAV", "route=create_task action=open_create")
                                 screen = "create_task"
                             }
@@ -540,8 +553,9 @@ class MainActivity : ComponentActivity() {
             }
             foodHealthTags = kotlinx.coroutines.withContext(Dispatchers.IO) {
                 items.associate { item ->
-                    val result = foodHealthEngine.lookupItem(item.text, uid, selectedLanguage.takeIf { it != "system" } ?: "en")
-                    item.text.lowercase().trim() to result
+                    val itemName = item.canonicalOrText
+                    val result = foodHealthEngine.lookupItem(itemName, uid, selectedLanguage.takeIf { it != "system" } ?: "en")
+                    itemName.lowercase().trim() to result
                 }
             }
         }
@@ -695,7 +709,17 @@ class MainActivity : ComponentActivity() {
                 return@LaunchedEffect
             }
             DiagLog.d("PREFILL", "openNewReminder from pendingPrefillNote")
-            draftDescription = note
+            if (ShoppingItemCanonicalizer.looksLikeShoppingImport(note)) {
+                draftTitle = "Shopping list"
+                draftDescription = ""
+                draftShoppingItems = note
+                draftShoppingItemsNeedConfirmation = true
+            } else {
+                draftTitle = ""
+                draftDescription = note
+                draftShoppingItems = ""
+                draftShoppingItemsNeedConfirmation = false
+            }
             DiagLog.d("BACK_NAV", "route=create_task action=open_create")
             screen = "create_task"
         }
@@ -717,6 +741,8 @@ class MainActivity : ComponentActivity() {
                         DiagLog.d("PREFILL", "openNewReminder sourceType=ARTICLE_URL")
                         draftTitle = summary.title?.trim() ?: ""
                         draftDescription = buildArticleBody(summary.summary, summary.url)
+                        draftShoppingItems = ""
+                        draftShoppingItemsNeedConfirmation = false
                         DiagLog.d("BACK_NAV", "route=create_task action=open_create")
                         screen = "create_task"
                     } finally {
@@ -727,7 +753,10 @@ class MainActivity : ComponentActivity() {
                 is SharedInputRoute.PlainTextNote -> {
                     DiagLog.d("PREFILL", "openNewReminder sourceType=PLAIN_TEXT_SHARE")
                     pendingSharedText = null
+                    draftTitle = ""
                     draftDescription = route.text
+                    draftShoppingItems = ""
+                    draftShoppingItemsNeedConfirmation = false
                     DiagLog.d("BACK_NAV", "route=create_task action=open_create")
                     screen = "create_task"
                 }
@@ -995,6 +1024,7 @@ class MainActivity : ComponentActivity() {
                     initialDueDate = draftDueDate,
                     initialDueTime = draftDueTime,
                     initialIsEverywhere = draftIsEverywhere,
+                    confirmLowConfidenceShoppingItems = draftShoppingItemsNeedConfirmation,
                     placeTypeUsages = placeTypeUsages,
                     onPlaceTypeUsed = { typeId ->
                         lifecycleScope.launch(Dispatchers.IO) {
@@ -1044,7 +1074,7 @@ class MainActivity : ComponentActivity() {
                                     for (item in shoppingItems) {
                                         runCatching {
                                             suggestionEngine.recordShoppingItemAdded(
-                                                uid, placeKey, task.placeTypeId, item.text
+                                                uid, placeKey, task.placeTypeId, item.canonicalOrText
                                             )
                                         }
                                     }
@@ -1423,11 +1453,18 @@ class MainActivity : ComponentActivity() {
                                         if (iId !in localIds && addedBy != null && addedBy != uid) {
                                             newFromRemote.add(iId)
                                         }
+                                        val remoteCanonical = rI["canonical_name"] as? String
+                                        val remoteText = rI["text"] as? String ?: ""
+                                        val canonicalText = remoteCanonical?.takeIf { it.isNotBlank() } ?: remoteText
                                         ShoppingListItem(
                                             id = iId,
                                             taskId = task.id,
-                                            text = rI["text"] as? String ?: "",
-                                            normalizedText = rI["normalized_text"] as? String ?: "",
+                                            text = canonicalText,
+                                            normalizedText = (rI["normalized_text"] as? String)
+                                                ?.takeIf { it.isNotBlank() }
+                                                ?: ShoppingItemCanonicalizer.normalize(canonicalText),
+                                            rawText = rI["raw_text"] as? String ?: remoteText,
+                                            canonicalName = canonicalText,
                                             orderIndex = (rI["order_index"] as? Long)?.toInt() ?: i,
                                             checked = rI["checked"] as? Boolean ?: false,
                                             checkedByUserId = rI["checked_by_user_id"] as? String,
@@ -2318,11 +2355,15 @@ class MainActivity : ComponentActivity() {
                             lifecycleScope.launch(Dispatchers.IO) {
                                 val now = System.currentTimeMillis()
                                 val displayName = authClient.getSession()?.displayName ?: "Me"
+                                val canonicalized = ShoppingItemCanonicalizer.canonicalize(text)
+                                val canonicalText = canonicalized.canonicalName.ifBlank { text.trim() }
                                 val newItem = ShoppingListItem(
                                     id = UUID.randomUUID().toString(),
                                     taskId = task.id,
-                                    text = text,
-                                    normalizedText = text.lowercase().trim(),
+                                    text = canonicalText,
+                                    normalizedText = ShoppingItemCanonicalizer.normalize(canonicalText),
+                                    rawText = text.trim(),
+                                    canonicalName = canonicalText,
                                     orderIndex = currentTaskShoppingItems.size,
                                     syncStatus = "PENDING_UPDATE",
                                     createdAt = now,

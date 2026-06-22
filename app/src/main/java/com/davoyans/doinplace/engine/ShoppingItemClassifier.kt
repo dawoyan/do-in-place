@@ -27,6 +27,9 @@ object ShoppingItemClassifier {
         "juice" to ShoppingItemCategory.BEVERAGES,
         "сок" to ShoppingItemCategory.BEVERAGES,
         "հյութ" to ShoppingItemCategory.BEVERAGES,
+        "cola" to ShoppingItemCategory.BEVERAGES,
+        "кола" to ShoppingItemCategory.BEVERAGES,
+        "կոլա" to ShoppingItemCategory.BEVERAGES,
         "coffee" to ShoppingItemCategory.BEVERAGES,
         "кофе" to ShoppingItemCategory.BEVERAGES,
         "սուրճ" to ShoppingItemCategory.BEVERAGES,
@@ -70,10 +73,14 @@ object ShoppingItemClassifier {
         "rice" to ShoppingItemCategory.CANNED_DRY_GOODS,
         "рис" to ShoppingItemCategory.CANNED_DRY_GOODS,
         "բրինձ" to ShoppingItemCategory.CANNED_DRY_GOODS,
+        "corn" to ShoppingItemCategory.CANNED_DRY_GOODS,
+        "кукуруза" to ShoppingItemCategory.CANNED_DRY_GOODS,
+        "եգիպտացորեն" to ShoppingItemCategory.CANNED_DRY_GOODS,
         "pasta" to ShoppingItemCategory.CANNED_DRY_GOODS,
         "макароны" to ShoppingItemCategory.CANNED_DRY_GOODS,
         "մակարոն" to ShoppingItemCategory.CANNED_DRY_GOODS,
         "cat food" to ShoppingItemCategory.PET,
+        "dog food" to ShoppingItemCategory.PET,
         "корм для кошек" to ShoppingItemCategory.PET,
         "կատվի կեր" to ShoppingItemCategory.PET,
         "diapers" to ShoppingItemCategory.BABY,
@@ -89,14 +96,15 @@ object ShoppingItemClassifier {
             .trim()
 
     fun classify(text: String): ShoppingItemCategory {
-        val normalized = normalize(text)
+        val canonical = ShoppingItemCanonicalizer.canonicalize(text, emitLog = false).canonicalName.ifBlank { text }
+        val normalized = normalize(canonical)
         val match = keywordCategories.firstOrNull { (keyword, _) ->
             normalized == keyword || normalized.contains(keyword)
         }
         val category = match?.second ?: ShoppingItemCategory.UNKNOWN
         DiagLog.d(
             "SHOP_CLASSIFY",
-            "item=$text normalized=$normalized category=${category.name} keyword=${match?.first ?: "none"}"
+            "item=$canonical normalized=$normalized category=${category.name} keyword=${match?.first ?: "none"}"
         )
         return category
     }

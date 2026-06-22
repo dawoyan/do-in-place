@@ -44,6 +44,7 @@ import com.davoyans.doinplace.data.model.toChecklistJson
 import com.davoyans.doinplace.data.places.PlaceTypeEngine
 import com.davoyans.doinplace.data.places.PlaceTypeInfo
 import com.davoyans.doinplace.data.repository.ContactDisplayRepository
+import com.davoyans.doinplace.engine.ShoppingItemCanonicalizer
 import com.davoyans.doinplace.ui.contacts.iconIdToVector
 import com.davoyans.doinplace.util.DiagLog
 import java.text.SimpleDateFormat
@@ -73,6 +74,7 @@ fun CreateTaskScreen(
     initialDueDate: String = "",
     initialDueTime: String = "",
     initialIsEverywhere: Boolean = false,
+    confirmLowConfidenceShoppingItems: Boolean = false,
     placeTypeUsages: List<PlaceTypeUsage> = emptyList(),
     onSave: (Task, List<ShoppingListItem>) -> Unit,
     onPickPlace: (title: String, description: String, shoppingItems: String, taskType: TaskType,
@@ -113,6 +115,7 @@ fun CreateTaskScreen(
     var assigneeExpanded by remember { mutableStateOf(false) }
     var radiusExpanded by remember { mutableStateOf(false) }
     var pendingTaskToCreate by remember { mutableStateOf<Task?>(null) }
+    var pendingShoppingSave by remember { mutableStateOf<PendingShoppingSave?>(null) }
     var showDiscardChangesDialog by remember { mutableStateOf(false) }
 
     var userOverrideType by remember { mutableStateOf<TaskType?>(null) }
@@ -295,6 +298,38 @@ fun CreateTaskScreen(
         }
     }
 
+    fun buildShoppingDrafts(rawText: String): List<PendingCanonicalShoppingItem> =
+        rawText.lines()
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+            .map { rawLine ->
+                val canonicalized = ShoppingItemCanonicalizer.canonicalize(rawLine)
+                val canonicalName = canonicalized.canonicalName.ifBlank { rawLine }
+                PendingCanonicalShoppingItem(
+                    rawText = rawLine,
+                    canonicalName = canonicalName,
+                    requiresConfirmation = confirmLowConfidenceShoppingItems &&
+                        canonicalized.confidence == ShoppingItemCanonicalizer.Confidence.LOW
+                )
+            }
+
+    fun finalizeShoppingSave(task: Task, drafts: List<PendingCanonicalShoppingItem>) {
+        val shoppingItems = drafts.mapIndexed { idx, draft ->
+            ShoppingListItem(
+                id = UUID.randomUUID().toString(),
+                taskId = task.id,
+                text = draft.canonicalName,
+                normalizedText = ShoppingItemCanonicalizer.normalize(draft.canonicalName),
+                rawText = draft.rawText,
+                canonicalName = draft.canonicalName,
+                orderIndex = idx
+            )
+        }
+        onSave(task, shoppingItems)
+        pendingShoppingSave = null
+        pendingTaskToCreate = null
+    }
+
     fun requestBack() {
         if (hasUnsavedChanges) {
             DiagLog.d("BACK_NAV", "route=create_task action=show_discard_dialog")
@@ -306,6 +341,7 @@ fun CreateTaskScreen(
 
     BackHandler {
         when {
+            pendingShoppingSave != null -> pendingShoppingSave = null
             pendingTaskToCreate != null -> pendingTaskToCreate = null
             showDiscardChangesDialog -> showDiscardChangesDialog = false
             else -> requestBack()
@@ -375,22 +411,18 @@ fun CreateTaskScreen(
                 TextButton(onClick = {
                     if (!blinkDone) return@TextButton
                     val activeTextVal = if (effectiveTaskType == TaskType.SHOPPING_LIST) shoppingItemsText else description
-                    val shoppingItems = if (task.taskType == TaskType.SHOPPING_LIST) {
-                        activeTextVal.lines().filter { it.isNotBlank() }
-                            .mapIndexed { idx, line ->
-                                ShoppingListItem(
-                                    id = UUID.randomUUID().toString(),
-                                    taskId = task.id,
-                                    text = line.trim(),
-                                    normalizedText = line.trim().lowercase()
-                                        .replace(Regex("[^\\w\\s]"), "")
-                                        .replace(Regex("\\s+"), " ").trim(),
-                                    orderIndex = idx
-                                )
-                            }
-                    } else emptyList()
-                    onSave(task, shoppingItems)
-                    pendingTaskToCreate = null
+                    if (task.taskType == TaskType.SHOPPING_LIST) {
+                        val drafts = buildShoppingDrafts(activeTextVal)
+                        val nextConfirmationIndex = drafts.indexOfFirst { it.requiresConfirmation }
+                        if (nextConfirmationIndex >= 0) {
+                            pendingShoppingSave = PendingShoppingSave(task, drafts, nextConfirmationIndex)
+                        } else {
+                            finalizeShoppingSave(task, drafts)
+                        }
+                    } else {
+                        onSave(task, emptyList())
+                        pendingTaskToCreate = null
+                    }
                 }) {
                     Text(
                         "Assign to $assigneeDisplayName",
@@ -400,6 +432,42 @@ fun CreateTaskScreen(
             },
             dismissButton = {
                 TextButton(onClick = { pendingTaskToCreate = null }) { Text("Cancel") }
+            }
+        )
+    }
+
+    pendingShoppingSave?.let { pending ->
+        val draft = pending.items[pending.confirmationIndex]
+        AlertDialog(
+            onDismissRequest = { },
+            title = { Text(stringResource(R.string.shopping_item_confirm_title)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(stringResource(R.string.shopping_item_confirm_raw, draft.rawText))
+                    Text(stringResource(R.string.shopping_item_confirm_suggested, draft.canonicalName))
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val nextConfirmationIndex = pending.items.withIndex()
+                        .firstOrNull { (index, item) -> index > pending.confirmationIndex && item.requiresConfirmation }
+                        ?.index ?: -1
+                    if (nextConfirmationIndex >= 0) {
+                        pendingShoppingSave = pending.copy(confirmationIndex = nextConfirmationIndex)
+                    } else {
+                        finalizeShoppingSave(pending.task, pending.items)
+                    }
+                }) {
+                    Text(stringResource(R.string.shopping_item_confirm_use))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    pendingShoppingSave = null
+                    pendingTaskToCreate = null
+                }) {
+                    Text(stringResource(R.string.shopping_item_confirm_edit))
+                }
             }
         )
     }
@@ -923,6 +991,18 @@ fun CreateTaskScreen(
         }
     }
 }
+
+private data class PendingCanonicalShoppingItem(
+    val rawText: String,
+    val canonicalName: String,
+    val requiresConfirmation: Boolean
+)
+
+private data class PendingShoppingSave(
+    val task: Task,
+    val items: List<PendingCanonicalShoppingItem>,
+    val confirmationIndex: Int
+)
 
 private fun activeText(type: TaskType, shoppingItems: String, description: String) =
     if (type == TaskType.SHOPPING_LIST) shoppingItems else description

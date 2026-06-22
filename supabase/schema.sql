@@ -82,26 +82,66 @@ create policy "task_events: insert own"
   with check (auth.uid() = actor_user_id);
 
 -- ── Tasks: additional columns added after initial schema ──────────────────
--- Run this if upgrading from initial schema:
--- alter table tasks add column if not exists priority text not null default 'NORMAL';
--- alter table tasks add column if not exists place_mode text not null default 'EXACT';
--- alter table tasks add column if not exists place_type_id text;
--- alter table tasks add column if not exists place_type_name text;
--- alter table tasks add column if not exists task_type text not null default 'SIMPLE';
+-- See supabase/migrations/20260617000000_add_missing_task_columns.sql
+-- Run that migration file in Supabase Dashboard → SQL Editor.
+-- Summary of what it adds:
+--   priority, place_mode, place_type_id, place_type_name, task_type, is_everywhere
+--   RLS policy: "tasks: read if shared with me"
+--   users.email → nullable; photo_url, notify_on_task_cancelled, updated_at columns
+
+-- ── Task shares (shared shopping lists) ────────────────────────────────────
+create table if not exists task_shares (
+  id                   uuid primary key,
+  task_id              uuid not null references tasks(id) on delete cascade,
+  owner_user_id        uuid not null references auth.users(id) on delete cascade,
+  shared_with_user_id  uuid not null references auth.users(id) on delete cascade,
+  permission           text not null default 'EDIT',
+  status               text not null default 'ACTIVE',
+  created_at           bigint,
+  updated_at           bigint,
+  unique(task_id, shared_with_user_id)
+);
+
+alter table task_shares enable row level security;
+create policy "task_shares: read own"
+  on task_shares for select
+  using (auth.uid() = owner_user_id or auth.uid() = shared_with_user_id);
+create policy "task_shares: owner inserts"
+  on task_shares for insert
+  with check (auth.uid() = owner_user_id);
+create policy "task_shares: owner updates"
+  on task_shares for update
+  using (auth.uid() = owner_user_id);
 
 -- ── Shopping list items ────────────────────────────────────────────────────
 create table if not exists shopping_list_items (
-  id            uuid primary key,
-  task_id       uuid not null references tasks(id) on delete cascade,
-  text          text not null,
-  normalized_text text not null default '',
-  order_index   integer not null default 0,
-  checked       boolean not null default false,
-  created_at    bigint,
-  updated_at    bigint
+  id                  uuid primary key,
+  task_id             uuid not null references tasks(id) on delete cascade,
+  text                text not null,
+  normalized_text     text not null default '',
+  raw_text            text,
+  canonical_name      text not null default '',
+  order_index         integer not null default 0,
+  checked             boolean not null default false,
+  checked_by_user_id  uuid references auth.users(id) on delete set null,
+  checked_at          bigint,
+  updated_by_user_id  uuid references auth.users(id) on delete set null,
+  created_at          bigint,
+  updated_at          bigint
 );
 
+-- Migrate existing tables (run once if table already existed)
+alter table shopping_list_items add column if not exists checked_by_user_id uuid references auth.users(id) on delete set null;
+alter table shopping_list_items add column if not exists checked_at bigint;
+alter table shopping_list_items add column if not exists updated_by_user_id uuid references auth.users(id) on delete set null;
+alter table shopping_list_items add column if not exists raw_text text;
+alter table shopping_list_items add column if not exists canonical_name text not null default '';
+update shopping_list_items set canonical_name = text where coalesce(trim(canonical_name), '') = '';
+update shopping_list_items set raw_text = text where coalesce(trim(raw_text), '') = '';
+
 alter table shopping_list_items enable row level security;
+
+-- Allow read for task owner/assignee OR active share recipient
 create policy "shopping_items: read if involved in task"
   on shopping_list_items for select
   using (
@@ -109,6 +149,12 @@ create policy "shopping_items: read if involved in task"
       select 1 from tasks t
       where t.id = shopping_list_items.task_id
         and (t.created_by_user_id = auth.uid() or t.assigned_to_user_id = auth.uid())
+    )
+    or exists (
+      select 1 from task_shares s
+      where s.task_id = shopping_list_items.task_id
+        and s.shared_with_user_id = auth.uid()
+        and s.status = 'ACTIVE'
     )
   );
 create policy "shopping_items: insert if task owner"
@@ -120,13 +166,22 @@ create policy "shopping_items: insert if task owner"
         and (t.created_by_user_id = auth.uid() or t.assigned_to_user_id = auth.uid())
     )
   );
-create policy "shopping_items: update if task owner"
+
+-- Allow update for task owner/assignee OR active share recipient with EDIT permission
+create policy "shopping_items: update if involved"
   on shopping_list_items for update
   using (
     exists (
       select 1 from tasks t
       where t.id = shopping_list_items.task_id
         and (t.created_by_user_id = auth.uid() or t.assigned_to_user_id = auth.uid())
+    )
+    or exists (
+      select 1 from task_shares s
+      where s.task_id = shopping_list_items.task_id
+        and s.shared_with_user_id = auth.uid()
+        and s.status = 'ACTIVE'
+        and s.permission = 'EDIT'
     )
   );
 
@@ -165,6 +220,8 @@ create table if not exists contact_invites (
   from_user_id            uuid not null references users(id),
   to_user_id              uuid references users(id),
   to_email                text,
+  requester_email_snapshot text,
+  requester_display_name_snapshot text,
   status                  text not null default 'PENDING',
   invite_code             text,
   normalized_invite_code  text,
@@ -225,6 +282,8 @@ create policy "contacts: accept code invite"
 -- alter table contact_invites add column if not exists expires_at bigint;
 -- alter table contact_invites add column if not exists used_by_user_id uuid references users(id);
 -- alter table contact_invites add column if not exists used_at bigint;
+-- alter table contact_invites add column if not exists requester_email_snapshot text;
+-- alter table contact_invites add column if not exists requester_display_name_snapshot text;
 -- create unique index if not exists contact_invites_norm_code_unique
 --   on contact_invites(normalized_invite_code) where normalized_invite_code is not null;
 -- create policy "contacts: read active code"

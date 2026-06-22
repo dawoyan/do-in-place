@@ -434,7 +434,7 @@ fun TaskDetailScreen(
                                 Column(modifier = Modifier.weight(1f).padding(top = 12.dp)) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Text(
-                                            text = item.text,
+                                            text = item.canonicalOrText,
                                             style = MaterialTheme.typography.bodyMedium.copy(
                                                 textDecoration = if (item.checked) TextDecoration.LineThrough else TextDecoration.None
                                             ),
@@ -444,7 +444,7 @@ fun TaskDetailScreen(
                                             },
                                             modifier = Modifier.weight(1f, fill = false)
                                         )
-                                        val healthResult = foodHealthTags[item.text.lowercase().trim()]
+                                        val healthResult = foodHealthTags[item.canonicalOrText.lowercase().trim()]
                                         val (healthVec, healthTint, healthDesc) = when (healthResult?.tag) {
                                             com.davoyans.doinplace.engine.FoodHealthEngine.HealthTag.HEALTHIER ->
                                                 Triple(Icons.Default.ThumbUp, Color(0xFF2E7D32), stringResource(R.string.healthier_item_icon))

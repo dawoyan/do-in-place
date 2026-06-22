@@ -34,10 +34,11 @@ class ShoppingAutoSortUseCase(
             .mapValues { (_, ranks) -> ranks.minOrNull() ?: Int.MAX_VALUE }
 
         val ranked = items.mapIndexed { originalIndex, item ->
-            val normalized = normalize(item.text)
+            val displayText = item.canonicalOrText
+            val normalized = normalize(displayText)
             val exactRank = exactIndex[normalized]
             val typeRank = sameTypeIndex[normalized]
-            val category = ShoppingItemClassifier.classify(item.text)
+            val category = ShoppingItemClassifier.classify(displayText)
             val categoryAnchor = categoryAnchors[category]
             SortKey(
                 item = item,
@@ -72,7 +73,7 @@ class ShoppingAutoSortUseCase(
 
         DiagLog.d(
             "SHOP_AUTO_SORT",
-            "source=${if (exactPlaceProfile.isNotEmpty()) "saved_exact_place" else "learned_same_place_type"} finalOrder=${sorted.joinToString(" | ") { it.text }}"
+            "source=${if (exactPlaceProfile.isNotEmpty()) "saved_exact_place" else "learned_same_place_type"} finalOrder=${sorted.joinToString(" | ") { it.canonicalOrText }}"
         )
 
         return AutoSortResult(
@@ -83,7 +84,7 @@ class ShoppingAutoSortUseCase(
 
     private fun orderByCategory(items: List<ShoppingListItem>, source: String): List<ShoppingListItem> {
         val sorted = items.mapIndexed { originalIndex, item ->
-            val category = ShoppingItemClassifier.classify(item.text)
+            val category = ShoppingItemClassifier.classify(item.canonicalOrText)
             SortKey(
                 item = item,
                 sourceRank = if (category == ShoppingItemCategory.UNKNOWN) 5 else 4,
@@ -97,7 +98,7 @@ class ShoppingAutoSortUseCase(
                 .thenBy { it.originalIndex }
         ).mapIndexed { index, key -> key.item.copy(orderIndex = index) }
 
-        DiagLog.d("SHOP_AUTO_SORT", "source=$source finalOrder=${sorted.joinToString(" | ") { it.text }}")
+        DiagLog.d("SHOP_AUTO_SORT", "source=$source finalOrder=${sorted.joinToString(" | ") { it.canonicalOrText }}")
         return sorted
     }
 

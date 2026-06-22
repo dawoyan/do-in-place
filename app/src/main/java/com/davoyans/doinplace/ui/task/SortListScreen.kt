@@ -67,7 +67,7 @@ fun SortListScreen(
         AlertDialog(
             onDismissRequest = { pendingDeleteItem = null },
             title = { Text(stringResource(R.string.shopping_delete_item_title)) },
-            text = { Text(stringResource(R.string.shopping_delete_item_message, item.text)) },
+            text = { Text(stringResource(R.string.shopping_delete_item_message, item.canonicalOrText)) },
             confirmButton = {
                 TextButton(onClick = {
                     DiagLog.d("SHOP_EDIT", "delete confirm itemId=${item.id.take(8)}")
@@ -208,7 +208,7 @@ fun SortListScreen(
                         )
                         Spacer(Modifier.width(8.dp))
                         Text(
-                            item.text,
+                            item.canonicalOrText,
                             style = MaterialTheme.typography.bodyLarge,
                             modifier = Modifier.weight(1f)
                         )
